@@ -18,6 +18,11 @@
 			"Name": "Waypoints",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "WaypointsEditorExtension",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
 		}
 	]
 }

@@ -34,7 +34,7 @@ protected:
 
 	UPROPERTY()
 		class USplineComponent* PathComponent;
-
+		
 	UPROPERTY()
 		class UArrowComponent* GuardFacingArrow;
 #endif // WITH_EDITORONLY_DATA
