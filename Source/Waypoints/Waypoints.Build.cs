@@ -26,6 +26,7 @@ public class Waypoints : ModuleRules
 			new string[]
 			{
 				"Core",
+                "NavigationSystem",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
