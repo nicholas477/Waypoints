@@ -23,6 +23,8 @@ class WAYPOINTS_API AWaypoint : public AActor
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
 	virtual void Destroyed() override;
 
+	TArray<AWaypoint*> GetLoop();
+
 protected:
 	bool bHasBeenCopied = false;
 

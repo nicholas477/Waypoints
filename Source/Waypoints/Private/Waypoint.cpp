@@ -82,6 +82,20 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 #endif // WITH_EDITORONLY_DATA
 }
 
+TArray<AWaypoint*> AWaypoint::GetLoop()
+{
+	TArray<AWaypoint*> WaypointLoop = {this};
+
+	AWaypoint* CurrentWaypoint = NextWaypoint.Get();
+	while (CurrentWaypoint && CurrentWaypoint != this && !WaypointLoop.Contains(CurrentWaypoint))
+	{
+		WaypointLoop.Push(CurrentWaypoint);
+		CurrentWaypoint = CurrentWaypoint->NextWaypoint.Get();
+	}
+
+	return WaypointLoop;
+}
+
 #if WITH_EDITOR
 void AWaypoint::PostRegisterAllComponents()
 {
