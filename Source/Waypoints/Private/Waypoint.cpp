@@ -30,30 +30,28 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 #if WITH_EDITOR
 	struct FConstructorStatics
 	{
-		ConstructorHelpers::FObjectFinderOptional<UTexture2D> NoteTextureObject;
+		ConstructorHelpers::FObjectFinderOptional<UTexture2D> WaypointIcon;
 
-		FName ID_Notes;
+		FName ID_WaypointIcon;
 
-		FText NAME_Notes;
+		FText NAME_WaypointIcon;
 
 		FConstructorStatics()
-			// Use helper class object to find the texture
-			// "/Engine/EditorResources/S_Note" is resource path
-			: NoteTextureObject(TEXT("/Engine/EditorResources/AI/S_NavLink"))
-			, ID_Notes(TEXT("Notes"))
-			, NAME_Notes(NSLOCTEXT("SpriteCategory", "Notes", "Notes"))
+			: WaypointIcon(TEXT("/Waypoints/EditorResources/S_Waypoint"))
+			, ID_WaypointIcon(TEXT("WaypointIcon"))
+			, NAME_WaypointIcon(NSLOCTEXT("SpriteCategory", "Waypoints", "WaypointIcon"))
 		{
 		}
 	};
 	static FConstructorStatics ConstructorStatics;
 
-	Sprite = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UBillboardComponent>(this, TEXT("Sprite"));
+	Sprite = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UBillboardComponent>(this, TEXT("Icon"));
 	if (Sprite)
 	{
 
-		Sprite->Sprite = ConstructorStatics.NoteTextureObject.Get();		// Get the sprite texture from helper class object
-		Sprite->SpriteInfo.Category = ConstructorStatics.ID_Notes;		// Assign sprite category name
-		Sprite->SpriteInfo.DisplayName = ConstructorStatics.NAME_Notes;	// Assign sprite display name
+		Sprite->Sprite = ConstructorStatics.WaypointIcon.Get();
+		Sprite->SpriteInfo.Category = ConstructorStatics.ID_WaypointIcon;
+		Sprite->SpriteInfo.DisplayName = ConstructorStatics.NAME_WaypointIcon;
 		Sprite->SetupAttachment(Scene);
 	}
 
@@ -64,6 +62,8 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		PathComponent->bSelectable = false;
 		PathComponent->bEditableWhenInherited = false;
 		PathComponent->bAbsoluteLocation = true;
+		PathComponent->bAbsoluteRotation = true;
+		PathComponent->bAbsoluteScale = true;
 	}
 
 	GuardFacingArrow = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UArrowComponent>(this, TEXT("Guard Facing Arrow Component"));
@@ -73,6 +73,7 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		GuardFacingArrow->bSelectable = false;
 		GuardFacingArrow->bEditableWhenInherited = false;
 		GuardFacingArrow->SetVisibility(false);
+		GuardFacingArrow->ArrowColor = FColor(255, 255, 255, 255);
 	}
 #endif // WITH_EDITOR
 }
