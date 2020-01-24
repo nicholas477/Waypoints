@@ -104,5 +104,5 @@ void FWaypointsEditorExtensionModule_Impl::CreateWaypointsSelectionMenu(FMenuBui
 }
 
 #undef LOCTEXT_NAMESPACE
-	
+
 IMPLEMENT_MODULE(FWaypointsEditorExtensionModule_Impl, WaypointsEditorExtension)

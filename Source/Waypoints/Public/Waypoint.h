@@ -12,8 +12,7 @@ class WAYPOINTS_API AWaypoint : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
-#if WITH_EDITOR
-	virtual void PostRegisterAllComponents() override;
+		virtual void PostRegisterAllComponents() override;
 	virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
@@ -26,27 +25,23 @@ class WAYPOINTS_API AWaypoint : public AActor
 	TArray<AWaypoint*> GetLoop();
 
 protected:
-	bool bHasBeenCopied = false;
+	bool bHasBeenCopied;
 
 	virtual void RemoveThisWaypoint();
 
-#if WITH_EDITORONLY_DATA
 	UPROPERTY()
 		class UBillboardComponent* Sprite;
 
 	UPROPERTY()
 		class USplineComponent* PathComponent;
-		
+
 	UPROPERTY()
 		class UArrowComponent* GuardFacingArrow;
-#endif // WITH_EDITORONLY_DATA
 
 	void CalculateSpline();
 
 	UFUNCTION(CallInEditor)
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);
-
-#endif // WITH_EDITOR
 
 protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Default")

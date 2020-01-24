@@ -6,11 +6,9 @@
 #if WITH_EDITOR
 #include "ObjectEditorUtils.h"
 #include "UObject/ConstructorHelpers.h"
-#if WITH_EDITORONLY_DATA
 #include "Components/BillboardComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/ArrowComponent.h"
-#endif // WITH_EDITORONLY_DATA
 #endif // WITH_EDITOR
 
 AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
@@ -22,23 +20,20 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 	AcceptanceRadius = 64.f;
 	WaitTime = 0.f;
 
+	bHasBeenCopied = false;
 	bStopOnOverlap = true;
 	bOrientGuardToWaypoint = false;
 
 	PreviousWaypoint = this;
 	NextWaypoint = this;
 
-#if WITH_EDITORONLY_DATA
-	// Structure to hold one-time initialization
+#if WITH_EDITOR
 	struct FConstructorStatics
 	{
-		// A helper class object we use to find target UTexture2D object in resource package
 		ConstructorHelpers::FObjectFinderOptional<UTexture2D> NoteTextureObject;
 
-		// Icon sprite category name
 		FName ID_Notes;
 
-		// Icon sprite display name
 		FText NAME_Notes;
 
 		FConstructorStatics()
@@ -79,12 +74,12 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		GuardFacingArrow->bEditableWhenInherited = false;
 		GuardFacingArrow->SetVisibility(false);
 	}
-#endif // WITH_EDITORONLY_DATA
+#endif // WITH_EDITOR
 }
 
 TArray<AWaypoint*> AWaypoint::GetLoop()
 {
-	TArray<AWaypoint*> WaypointLoop = {this};
+	TArray<AWaypoint*> WaypointLoop = { this };
 
 	AWaypoint* CurrentWaypoint = NextWaypoint.Get();
 	while (CurrentWaypoint && CurrentWaypoint != this && !WaypointLoop.Contains(CurrentWaypoint))
@@ -96,11 +91,11 @@ TArray<AWaypoint*> AWaypoint::GetLoop()
 	return WaypointLoop;
 }
 
-#if WITH_EDITOR
 void AWaypoint::PostRegisterAllComponents()
 {
 	Super::PostRegisterAllComponents();
 
+#if WITH_EDITOR
 	const UWorld* World = GetWorld();
 	if (World && World->WorldType == EWorldType::Editor)
 	{
@@ -111,10 +106,12 @@ void AWaypoint::PostRegisterAllComponents()
 			NavSys->OnNavigationGenerationFinishedDelegate.AddDynamic(this, &AWaypoint::OnNavigationGenerationFinished);
 		}
 	}
+#endif // WITH_EDITOR
 }
 
 void AWaypoint::PreEditChange(UProperty* PropertyThatWillChange)
 {
+#if WITH_EDITOR
 	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
 
 	if (PropertyThatWillChange && PropertyThatWillChange->GetFName() == NAME_NextWaypoint)
@@ -125,16 +122,18 @@ void AWaypoint::PreEditChange(UProperty* PropertyThatWillChange)
 			NextWaypoint->CalculateSpline();
 		}
 	}
+#endif // WITH_EDITOR
 
 	Super::PreEditChange(PropertyThatWillChange);
 }
 
 void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+#if WITH_EDITOR
 	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
 	static const FName NAME_bOrientGuardToWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, bOrientGuardToWaypoint);
-
-	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	// This is called when the waypoint deletion is undo'ed
 	if (PropertyChangedEvent.ChangeType == EPropertyChangeType::Unspecified && PreviousWaypoint.IsValid())
@@ -161,12 +160,14 @@ void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 			GuardFacingArrow->SetVisibility(bOrientGuardToWaypoint);
 		}
 	}
+#endif // WITH_EDITOR
 }
 
 void AWaypoint::PostEditImport()
 {
 	Super::PostEditImport();
 
+#if WITH_EDITOR
 	if (!bHasBeenCopied && NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint != this)
 	{
 		// Look at the next link's previous link, set its next waypoint to this
@@ -186,18 +187,21 @@ void AWaypoint::PostEditImport()
 
 		bHasBeenCopied = true;
 	}
+#endif // WITH_EDITOR
 }
 
 void AWaypoint::PostEditMove(bool bFinished)
 {
 	Super::PostEditMove(bFinished);
 
+#if WITH_EDITOR
 	CalculateSpline();
 
 	if (PreviousWaypoint.IsValid())
 	{
 		PreviousWaypoint->CalculateSpline();
 	}
+#endif // WITH_EDITOR
 }
 
 void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
@@ -207,11 +211,10 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 
 void AWaypoint::CalculateSpline()
 {
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 	if (NextWaypoint.IsValid() && NextWaypoint != this)
 	{
 		PathComponent->SetVisibility(true);
-
 
 		UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 		if (NavSys)
@@ -236,7 +239,7 @@ void AWaypoint::CalculateSpline()
 					PathComponent->SetSplineWorldPoints(SplinePoints);
 					if (SplinePoints.Num() > 1)
 					{
-						for (int64 i = 0; i < SplinePoints.Num(); ++i)
+						for (int32 i = 0; i < SplinePoints.Num(); ++i)
 						{
 							PathComponent->SetTangentsAtSplinePoint(i, FVector(0.f, 0.f, 0.f), FVector(0.f, 0.f, 0.f), ESplineCoordinateSpace::World);
 						}
@@ -249,7 +252,7 @@ void AWaypoint::CalculateSpline()
 	{
 		PathComponent->SetSplineWorldPoints(FOccluderVertexArray());
 	}
-#endif WITH_EDITORONLY_DATA
+#endif // WITH_EDITOR
 }
 
 void AWaypoint::OnNavigationGenerationFinished(class ANavigationData* NavData)
@@ -266,6 +269,7 @@ void AWaypoint::Destroyed()
 
 void AWaypoint::RemoveThisWaypoint()
 {
+#if WITH_EDITOR
 	// Go to the previous waypoint, and either remove this as the next waypoint or set its next waypoint to our next waypoint
 	if (PreviousWaypoint.IsValid() && PreviousWaypoint->NextWaypoint == this)
 	{
@@ -279,7 +283,5 @@ void AWaypoint::RemoveThisWaypoint()
 		//UE_LOG(LogTemp, Warning, TEXT("Setting next waypoint's previous waypoint"));
 		NextWaypoint->PreviousWaypoint = PreviousWaypoint;
 	}
-
-}
-
 #endif // WITH_EDITOR
+}
