@@ -5,13 +5,14 @@
 	"FriendlyName": "Waypoints",
 	"Description": "NPC Waypoint System",
 	"Category": "Gameplay",
-	"CreatedBy": "Nicholas Chalkley",
-	"CreatedByURL": "",
+	"CreatedBy": "Nick",
+	"CreatedByURL": "https://github.com/nicholas477/Waypoints",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
