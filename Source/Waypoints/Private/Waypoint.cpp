@@ -61,9 +61,9 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		PathComponent->SetupAttachment(Scene);
 		PathComponent->bSelectable = false;
 		PathComponent->bEditableWhenInherited = false;
-		PathComponent->bAbsoluteLocation = true;
-		PathComponent->bAbsoluteRotation = true;
-		PathComponent->bAbsoluteScale = true;
+		PathComponent->SetUsingAbsoluteLocation(true);
+		PathComponent->SetUsingAbsoluteRotation(true);
+		PathComponent->SetUsingAbsoluteScale(true);
 	}
 
 	GuardFacingArrow = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UArrowComponent>(this, TEXT("Guard Facing Arrow Component"));
