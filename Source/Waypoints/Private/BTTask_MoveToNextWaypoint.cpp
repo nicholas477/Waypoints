@@ -11,6 +11,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Tasks/AITask_MoveTo.h"
 
+#include "Waypoint.h"
+
 UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	NodeName = "Move To Next Waypoint";
@@ -18,21 +20,13 @@ UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer&
 	bNotifyTick = !bUseGameplayTasks;
 	bNotifyTaskFinished = true;
 
-	AcceptableRadius = GET_AI_CONFIG_VAR(AcceptanceRadius);
-	bReachTestIncludesGoalRadius = bReachTestIncludesAgentRadius = bStopOnOverlap = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
+	bReachTestIncludesGoalRadius = bReachTestIncludesAgentRadius = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
 	bAllowStrafe = GET_AI_CONFIG_VAR(bAllowStrafing);
 	bAllowPartialPath = GET_AI_CONFIG_VAR(bAcceptPartialPaths);
-	bTrackMovingGoal = true;
-	bProjectGoalLocation = true;
 	bUsePathfinding = true;
 
-	bStopOnOverlapNeedsUpdate = true;
-
-	ObservedBlackboardValueTolerance = AcceptableRadius * 0.95f;
-
-	// accept only actors and vectors
-	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey), AActor::StaticClass());
-	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey));
+	// Accept only waypoints
+	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey), AWaypoint::StaticClass());
 }
 
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -54,20 +48,6 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeCompone
 		UE_VLOG(MyController, LogBehaviorTree, Log, TEXT("Pathfinding requests are freezed, waiting..."));
 	}
 
-	if (NodeResult == EBTNodeResult::InProgress && bObserveBlackboardValue)
-	{
-		UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
-		if (ensure(BlackboardComp))
-		{
-			if (MyMemory->BBObserverDelegateHandle.IsValid())
-			{
-				UE_VLOG(MyController, LogBehaviorTree, Warning, TEXT("UBTTask_MoveToNextWaypoint::ExecuteTask \'%s\' Old BBObserverDelegateHandle is still valid! Removing old Observer."), *GetNodeName());
-				BlackboardComp->UnregisterObserver(BlackboardKey.GetSelectedKeyID(), MyMemory->BBObserverDelegateHandle);
-			}
-			MyMemory->BBObserverDelegateHandle = BlackboardComp->RegisterObserver(BlackboardKey.GetSelectedKeyID(), this, FOnBlackboardChangeNotification::CreateUObject(this, &UBTTask_MoveToNextWaypoint::OnBlackboardValueChange));
-		}
-	}
-
 	return NodeResult;
 }
 
@@ -81,41 +61,26 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 	if (MyController && MyBlackboard)
 	{
 		FAIMoveRequest MoveReq;
-		MoveReq.SetNavigationFilter(*FilterClass ? FilterClass : MyController->GetDefaultNavigationFilterClass());
+		MoveReq.SetNavigationFilter(MyController->GetDefaultNavigationFilterClass());
 		MoveReq.SetAllowPartialPath(bAllowPartialPath);
-		MoveReq.SetAcceptanceRadius(AcceptableRadius);
 		MoveReq.SetCanStrafe(bAllowStrafe);
-		MoveReq.SetReachTestIncludesAgentRadius(bReachTestIncludesAgentRadius);
-		MoveReq.SetReachTestIncludesGoalRadius(bReachTestIncludesGoalRadius);
-		MoveReq.SetProjectGoalLocation(bProjectGoalLocation);
 		MoveReq.SetUsePathfinding(bUsePathfinding);
 
 		if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
 		{
 			UObject* KeyValue = MyBlackboard->GetValue<UBlackboardKeyType_Object>(BlackboardKey.GetSelectedKeyID());
-			AActor* TargetActor = Cast<AActor>(KeyValue);
+			AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
 			if (TargetActor)
 			{
-				if (bTrackMovingGoal)
-				{
-					MoveReq.SetGoalActor(TargetActor);
-				}
-				else
-				{
-					MoveReq.SetGoalLocation(TargetActor->GetActorLocation());
-				}
+				MoveReq.SetAcceptanceRadius(TargetActor->GetAcceptanceRadius());
+				MoveReq.SetReachTestIncludesAgentRadius(TargetActor->GetStopOnOverlap());
+				MoveReq.SetReachTestIncludesGoalRadius(TargetActor->GetStopOnOverlap());
+				MoveReq.SetGoalActor(TargetActor);
 			}
 			else
 			{
 				UE_VLOG(MyController, LogBehaviorTree, Warning, TEXT("UBTTask_MoveToNextWaypoint::ExecuteTask tried to go to actor while BB %s entry was empty"), *BlackboardKey.SelectedKeyName.ToString());
 			}
-		}
-		else if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Vector::StaticClass())
-		{
-			const FVector TargetLocation = MyBlackboard->GetValue<UBlackboardKeyType_Vector>(BlackboardKey.GetSelectedKeyID());
-			MoveReq.SetGoalLocation(TargetLocation);
-
-			MyMemory->PreviousGoalLocation = TargetLocation;
 		}
 
 		if (MoveReq.IsValid())
@@ -188,73 +153,6 @@ UAITask_MoveTo* UBTTask_MoveToNextWaypoint::PrepareMoveTask(UBehaviorTreeCompone
 	return MoveTask;
 }
 
-EBlackboardNotificationResult UBTTask_MoveToNextWaypoint::OnBlackboardValueChange(const UBlackboardComponent& Blackboard, FBlackboard::FKey ChangedKeyID)
-{
-	UBehaviorTreeComponent* BehaviorComp = Cast<UBehaviorTreeComponent>(Blackboard.GetBrainComponent());
-	if (BehaviorComp == nullptr)
-	{
-		return EBlackboardNotificationResult::RemoveObserver;
-	}
-
-	uint8* RawMemory = BehaviorComp->GetNodeMemory(this, BehaviorComp->FindInstanceContainingNode(this));
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(RawMemory);
-
-	const EBTTaskStatus::Type TaskStatus = BehaviorComp->GetTaskStatus(this);
-	if (TaskStatus != EBTTaskStatus::Active)
-	{
-		UE_VLOG(BehaviorComp, LogBehaviorTree, Error, TEXT("BT MoveTo \'%s\' task observing BB entry while no longer being active!"), *GetNodeName());
-
-		// resetting BBObserverDelegateHandle without unregistering observer since 
-		// returning EBlackboardNotificationResult::RemoveObserver here will take care of that for us
-		MyMemory->BBObserverDelegateHandle.Reset(); //-V595
-
-		return EBlackboardNotificationResult::RemoveObserver;
-	}
-
-	// this means the move has already started. MyMemory->bWaitingForPath == true would mean we're waiting for right moment to start it anyway,
-	// so we don't need to do anything due to BB value change 
-	if (MyMemory != nullptr && MyMemory->bWaitingForPath == false && BehaviorComp->GetAIOwner() != nullptr)
-	{
-		check(BehaviorComp->GetAIOwner()->GetPathFollowingComponent());
-
-		bool bUpdateMove = true;
-		// check if new goal is almost identical to previous one
-		if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Vector::StaticClass())
-		{
-			const FVector TargetLocation = Blackboard.GetValue<UBlackboardKeyType_Vector>(BlackboardKey.GetSelectedKeyID());
-
-			bUpdateMove = (FVector::DistSquared(TargetLocation, MyMemory->PreviousGoalLocation) > FMath::Square(ObservedBlackboardValueTolerance));
-		}
-
-		if (bUpdateMove)
-		{
-			// don't abort move if using AI tasks - it will mess things up
-			if (MyMemory->MoveRequestID.IsValid())
-			{
-				UE_VLOG(BehaviorComp, LogBehaviorTree, Log, TEXT("Blackboard value for goal has changed, aborting current move request"));
-				StopWaitingForMessages(*BehaviorComp);
-				BehaviorComp->GetAIOwner()->GetPathFollowingComponent()->AbortMove(*this, FPathFollowingResultFlags::NewRequest, MyMemory->MoveRequestID, EPathFollowingVelocityMode::Keep);
-			}
-
-			if (!bUseGameplayTasks && BehaviorComp->GetAIOwner()->ShouldPostponePathUpdates())
-			{
-				// NodeTick will take care of requesting move
-				MyMemory->bWaitingForPath = true;
-			}
-			else
-			{
-				const EBTNodeResult::Type NodeResult = PerformMoveTask(*BehaviorComp, RawMemory);
-				if (NodeResult != EBTNodeResult::InProgress)
-				{
-					FinishLatentTask(*BehaviorComp, NodeResult);
-				}
-			}
-		}
-	}
-
-	return EBlackboardNotificationResult::ContinueObserving;
-}
-
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
@@ -291,15 +189,16 @@ void UBTTask_MoveToNextWaypoint::OnTaskFinished(UBehaviorTreeComponent& OwnerCom
 	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
 	MyMemory->Task.Reset();
 
-	if (bObserveBlackboardValue)
+	// Set the blackboard value to the next waypoint
+	if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
 	{
-		UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
-		if (ensure(BlackboardComp) && MyMemory->BBObserverDelegateHandle.IsValid())
+		UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
+		UObject* KeyValue = MyBlackboard->GetValue<UBlackboardKeyType_Object>(BlackboardKey.GetSelectedKeyID());
+		AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
+		if (TargetActor)
 		{
-			BlackboardComp->UnregisterObserver(BlackboardKey.GetSelectedKeyID(), MyMemory->BBObserverDelegateHandle);
+			MyBlackboard->SetValueAsObject(BlackboardKey.SelectedKeyName, TargetActor->GetNextWaypoint().Get());
 		}
-
-		MyMemory->BBObserverDelegateHandle.Reset();
 	}
 
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
@@ -392,28 +291,11 @@ uint16 UBTTask_MoveToNextWaypoint::GetInstanceMemorySize() const
 	return sizeof(FBTMoveToTaskMemory);
 }
 
-void UBTTask_MoveToNextWaypoint::PostLoad()
-{
-	Super::PostLoad();
-
-	if (bStopOnOverlapNeedsUpdate)
-	{
-		bStopOnOverlapNeedsUpdate = false;
-		bReachTestIncludesAgentRadius = bStopOnOverlap;
-		bReachTestIncludesGoalRadius = false;
-	}
-}
-
 #if WITH_EDITOR
 
 FName UBTTask_MoveToNextWaypoint::GetNodeIconName() const
 {
 	return FName("BTEditor.Graph.BTNode.Task.MoveTo.Icon");
-}
-
-void UBTTask_MoveToNextWaypoint::OnNodeCreated()
-{
-	bStopOnOverlapNeedsUpdate = false;
 }
 
 #endif	// WITH_EDITOR

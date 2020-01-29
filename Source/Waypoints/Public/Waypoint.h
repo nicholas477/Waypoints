@@ -12,7 +12,7 @@ class WAYPOINTS_API AWaypoint : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
-		virtual void PostRegisterAllComponents() override;
+	virtual void PostRegisterAllComponents() override;
 	virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
@@ -22,7 +22,23 @@ class WAYPOINTS_API AWaypoint : public AActor
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
 	virtual void Destroyed() override;
 
-	TArray<AWaypoint*> GetLoop();
+	UFUNCTION()
+		TWeakObjectPtr<AWaypoint> GetNextWaypoint() const { return NextWaypoint; };
+
+	UFUNCTION()
+		TArray<AWaypoint*> GetLoop() const;
+
+	UFUNCTION()
+		float GetWaitTime() const { return WaitTime; };
+
+	UFUNCTION()
+		bool GetOrientGuardToWaypoint() const { return bOrientGuardToWaypoint; };
+
+	UFUNCTION()
+		bool GetStopOnOverlap() const { return bStopOnOverlap; };
+
+	UFUNCTION()
+		float GetAcceptanceRadius() const { return AcceptanceRadius; };
 
 protected:
 	bool bHasBeenCopied;

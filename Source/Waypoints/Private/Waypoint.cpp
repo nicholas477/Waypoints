@@ -78,9 +78,9 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 #endif // WITH_EDITOR
 }
 
-TArray<AWaypoint*> AWaypoint::GetLoop()
+TArray<AWaypoint*> AWaypoint::GetLoop() const
 {
-	TArray<AWaypoint*> WaypointLoop = { this };
+	TArray<AWaypoint*> WaypointLoop = { const_cast<AWaypoint*>(this) };
 
 	AWaypoint* CurrentWaypoint = NextWaypoint.Get();
 	while (CurrentWaypoint && CurrentWaypoint != this && !WaypointLoop.Contains(CurrentWaypoint))
