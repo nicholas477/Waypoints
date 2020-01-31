@@ -76,6 +76,7 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 				MoveReq.SetReachTestIncludesAgentRadius(TargetActor->GetStopOnOverlap());
 				MoveReq.SetReachTestIncludesGoalRadius(TargetActor->GetStopOnOverlap());
 				MoveReq.SetGoalActor(TargetActor);
+				MyMemory->RemainingWaitTime = TargetActor->GetWaitTime();
 			}
 			else
 			{
@@ -218,7 +219,10 @@ void UBTTask_MoveToNextWaypoint::TickTask(UBehaviorTreeComponent& OwnerComp, uin
 			const EBTNodeResult::Type NodeResult = PerformMoveTask(OwnerComp, NodeMemory);
 			if (NodeResult != EBTNodeResult::InProgress)
 			{
-				FinishLatentTask(OwnerComp, NodeResult);
+				if (MyMemory->RemainingWaitTime <= 0.f)
+				{
+					FinishLatentTask(OwnerComp, NodeResult);
+				}
 			}
 		}
 	}

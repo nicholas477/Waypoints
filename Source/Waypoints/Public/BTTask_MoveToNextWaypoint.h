@@ -26,6 +26,8 @@ struct FBTMoveToTaskMemory
 
 	uint8 bWaitingForPath : 1;
 	uint8 bObserverCanFinishTask : 1;
+	
+	float RemainingWaitTime;
 };
 
 /**
