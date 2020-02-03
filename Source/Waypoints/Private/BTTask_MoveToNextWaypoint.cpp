@@ -25,20 +25,8 @@ UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer&
 	bAllowPartialPath = GET_AI_CONFIG_VAR(bAcceptPartialPaths);
 	bUsePathfinding = true;
 
-	TurnSpeed = 4.0f;
-
 	// Accept only waypoints
 	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey), AWaypoint::StaticClass());
-}
-
-namespace
-{
-	FORCEINLINE_DEBUGGABLE float CalculateAngleDifferenceDot(const FVector& VectorA, const FVector& VectorB)
-	{
-		return (VectorA.IsNearlyZero() || VectorB.IsNearlyZero())
-			? 1.f
-			: VectorA.CosineAngle2D(VectorB);
-	}
 }
 
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

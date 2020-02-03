@@ -54,9 +54,6 @@ class WAYPOINTS_API UBTTask_MoveToNextWaypoint : public UBTTask_BlackboardBase
 	UPROPERTY(Category = Node, EditAnywhere)
 	uint32 bReachTestIncludesGoalRadius : 1;
 
-	UPROPERTY(Category = Node, EditAnywhere)
-	float TurnSpeed;
-
 	/** if set, move will use pathfinding. Not exposed on purpose, please use BTTask_MoveDirectlyToward */
 	uint32 bUsePathfinding : 1;
 
