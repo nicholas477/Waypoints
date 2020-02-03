@@ -25,8 +25,20 @@ UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer&
 	bAllowPartialPath = GET_AI_CONFIG_VAR(bAcceptPartialPaths);
 	bUsePathfinding = true;
 
+	TurnSpeed = 4.0f;
+
 	// Accept only waypoints
 	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey), AWaypoint::StaticClass());
+}
+
+namespace
+{
+	FORCEINLINE_DEBUGGABLE float CalculateAngleDifferenceDot(const FVector& VectorA, const FVector& VectorB)
+	{
+		return (VectorA.IsNearlyZero() || VectorB.IsNearlyZero())
+			? 1.f
+			: VectorA.CosineAngle2D(VectorB);
+	}
 }
 
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -76,7 +88,6 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 				MoveReq.SetReachTestIncludesAgentRadius(TargetActor->GetStopOnOverlap());
 				MoveReq.SetReachTestIncludesGoalRadius(TargetActor->GetStopOnOverlap());
 				MoveReq.SetGoalActor(TargetActor);
-				MyMemory->RemainingWaitTime = TargetActor->GetWaitTime();
 			}
 			else
 			{
@@ -208,6 +219,7 @@ void UBTTask_MoveToNextWaypoint::OnTaskFinished(UBehaviorTreeComponent& OwnerCom
 void UBTTask_MoveToNextWaypoint::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	FBTMoveToTaskMemory* MyMemory = (FBTMoveToTaskMemory*)NodeMemory;
+
 	if (MyMemory->bWaitingForPath && !OwnerComp.IsPaused())
 	{
 		AAIController* MyController = OwnerComp.GetAIOwner();
@@ -219,11 +231,19 @@ void UBTTask_MoveToNextWaypoint::TickTask(UBehaviorTreeComponent& OwnerComp, uin
 			const EBTNodeResult::Type NodeResult = PerformMoveTask(OwnerComp, NodeMemory);
 			if (NodeResult != EBTNodeResult::InProgress)
 			{
-				if (MyMemory->RemainingWaitTime <= 0.f)
-				{
-					FinishLatentTask(OwnerComp, NodeResult);
-				}
+				FinishLatentTask(OwnerComp, NodeResult);
 			}
+		}
+	}
+
+	// If remaining wait time >= 0.f then we should be waiting
+	if (MyMemory->RemainingWaitTime > 0.f)
+	{
+		MyMemory->RemainingWaitTime -= DeltaSeconds;
+
+		if (MyMemory->RemainingWaitTime <= 0.f)
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
 	}
 }
@@ -232,6 +252,32 @@ void UBTTask_MoveToNextWaypoint::OnMessage(UBehaviorTreeComponent& OwnerComp, ui
 {
 	// AIMessage_RepathFailed means task has failed
 	bSuccess &= (Message != UBrainComponent::AIMessage_RepathFailed);
+	
+	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
+	UObject* KeyValue = MyBlackboard->GetValue<UBlackboardKeyType_Object>(BlackboardKey.GetSelectedKeyID());
+	AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
+
+	AAIController* MyController = OwnerComp.GetAIOwner();
+
+	// We've finished moving to the waypoint, now time to wait
+	if (bSuccess && TargetActor && (TargetActor->GetWaitTime() > 0.f))
+	{
+		// Turn the actor towards the waypoint
+		if (MyController && MyController->GetPawn() && TargetActor->GetOrientGuardToWaypoint())
+		{
+			APawn* Pawn = MyController->GetPawn();
+			const FVector PawnLocation = Pawn->GetActorLocation();
+			const FVector DirectionVector = TargetActor->GetActorForwardVector();
+			const FVector FocalPoint = PawnLocation + DirectionVector * 10000.0f;
+
+			MyController->SetFocalPoint(FocalPoint, EAIFocusPriority::Gameplay);
+		}
+
+		MyMemory->RemainingWaitTime = TargetActor->GetWaitTime();
+		return;
+	}
+
 	Super::OnMessage(OwnerComp, NodeMemory, Message, SenderID, bSuccess);
 }
 
