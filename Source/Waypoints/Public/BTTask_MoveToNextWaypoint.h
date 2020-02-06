@@ -14,7 +14,7 @@
 class UAITask_MoveTo;
 class UBlackboardComponent;
 
-struct FBTMoveToTaskMemory
+struct FBTMoveToNextWaypointTaskMemory
 {
 	/** Move request ID */
 	FAIRequestID MoveRequestID;
@@ -40,11 +40,7 @@ class WAYPOINTS_API UBTTask_MoveToNextWaypoint : public UBTTask_BlackboardBase
 	GENERATED_UCLASS_BODY()
 
 	UPROPERTY(Category = Node, EditAnywhere)
-	uint32 bAllowStrafe : 1;
-
-	/** if set, use incomplete path when goal can't be reached */
-	UPROPERTY(Category = Node, EditAnywhere, AdvancedDisplay)
-	uint32 bAllowPartialPath : 1;
+	uint32 bWaitAtCheckpoint : 1;
 
 	/** if set, radius of AI's capsule will be added to threshold between AI and goal location in destination reach test  */
 	UPROPERTY(Category = Node, EditAnywhere)
@@ -54,8 +50,8 @@ class WAYPOINTS_API UBTTask_MoveToNextWaypoint : public UBTTask_BlackboardBase
 	UPROPERTY(Category = Node, EditAnywhere)
 	uint32 bReachTestIncludesGoalRadius : 1;
 
-	/** if set, move will use pathfinding. Not exposed on purpose, please use BTTask_MoveDirectlyToward */
-	uint32 bUsePathfinding : 1;
+	//UPROPERTY(Category = Node, EditAnywhere, AdvancedDisplay)
+	//uint32 bAllowStrafe : 1;
 
 	/** set automatically if move should use GameplayTasks */
 	uint32 bUseGameplayTasks : 1;

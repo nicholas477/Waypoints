@@ -21,9 +21,9 @@ UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer&
 	bNotifyTaskFinished = true;
 
 	bReachTestIncludesGoalRadius = bReachTestIncludesAgentRadius = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
-	bAllowStrafe = GET_AI_CONFIG_VAR(bAllowStrafing);
-	bAllowPartialPath = GET_AI_CONFIG_VAR(bAcceptPartialPaths);
-	bUsePathfinding = true;
+	//bAllowStrafe = GET_AI_CONFIG_VAR(bAllowStrafing);
+
+	bWaitAtCheckpoint = true;
 
 	// Accept only waypoints
 	BlackboardKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_MoveToNextWaypoint, BlackboardKey), AWaypoint::StaticClass());
@@ -33,7 +33,7 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeCompone
 {
 	EBTNodeResult::Type NodeResult = EBTNodeResult::InProgress;
 
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(NodeMemory);
 	MyMemory->PreviousGoalLocation = FAISystem::InvalidLocation;
 	MyMemory->MoveRequestID = FAIRequestID::InvalidRequest;
 
@@ -54,7 +54,7 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::ExecuteTask(UBehaviorTreeCompone
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(NodeMemory);
 	AAIController* MyController = OwnerComp.GetAIOwner();
 
 	EBTNodeResult::Type NodeResult = EBTNodeResult::Failed;
@@ -62,9 +62,8 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 	{
 		FAIMoveRequest MoveReq;
 		MoveReq.SetNavigationFilter(MyController->GetDefaultNavigationFilterClass());
-		MoveReq.SetAllowPartialPath(bAllowPartialPath);
-		MoveReq.SetCanStrafe(bAllowStrafe);
-		MoveReq.SetUsePathfinding(bUsePathfinding);
+		//MoveReq.SetCanStrafe(bAllowStrafe);
+		MoveReq.SetUsePathfinding(true);
 
 		if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
 		{
@@ -73,8 +72,8 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 			if (TargetActor)
 			{
 				MoveReq.SetAcceptanceRadius(TargetActor->GetAcceptanceRadius());
-				MoveReq.SetReachTestIncludesAgentRadius(TargetActor->GetStopOnOverlap());
-				MoveReq.SetReachTestIncludesGoalRadius(TargetActor->GetStopOnOverlap());
+				MoveReq.SetReachTestIncludesAgentRadius(true);
+				MoveReq.SetReachTestIncludesGoalRadius(true);
 				MoveReq.SetGoalActor(TargetActor);
 			}
 			else
@@ -155,7 +154,7 @@ UAITask_MoveTo* UBTTask_MoveToNextWaypoint::PrepareMoveTask(UBehaviorTreeCompone
 
 EBTNodeResult::Type UBTTask_MoveToNextWaypoint::AbortTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(NodeMemory);
 	if (!MyMemory->bWaitingForPath)
 	{
 		if (MyMemory->MoveRequestID.IsValid())
@@ -186,7 +185,7 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::AbortTask(UBehaviorTreeComponent
 
 void UBTTask_MoveToNextWaypoint::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(NodeMemory);
 	MyMemory->Task.Reset();
 
 	// Set the blackboard value to the next waypoint
@@ -201,12 +200,18 @@ void UBTTask_MoveToNextWaypoint::OnTaskFinished(UBehaviorTreeComponent& OwnerCom
 		}
 	}
 
+	// Reset the AI's focus
+	if (AAIController* MyController = OwnerComp.GetAIOwner())
+	{
+		MyController->ClearFocus(EAIFocusPriority::Gameplay);
+	}
+
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }
 
 void UBTTask_MoveToNextWaypoint::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	FBTMoveToTaskMemory* MyMemory = (FBTMoveToTaskMemory*)NodeMemory;
+	FBTMoveToNextWaypointTaskMemory* MyMemory = (FBTMoveToNextWaypointTaskMemory*)NodeMemory;
 
 	if (MyMemory->bWaitingForPath && !OwnerComp.IsPaused())
 	{
@@ -241,7 +246,7 @@ void UBTTask_MoveToNextWaypoint::OnMessage(UBehaviorTreeComponent& OwnerComp, ui
 	// AIMessage_RepathFailed means task has failed
 	bSuccess &= (Message != UBrainComponent::AIMessage_RepathFailed);
 	
-	FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(NodeMemory);
+	FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(NodeMemory);
 	const UBlackboardComponent* MyBlackboard = OwnerComp.GetBlackboardComponent();
 	UObject* KeyValue = MyBlackboard->GetValue<UBlackboardKeyType_Object>(BlackboardKey.GetSelectedKeyID());
 	AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
@@ -249,10 +254,10 @@ void UBTTask_MoveToNextWaypoint::OnMessage(UBehaviorTreeComponent& OwnerComp, ui
 	AAIController* MyController = OwnerComp.GetAIOwner();
 
 	// We've finished moving to the waypoint, now time to wait
-	if (bSuccess && TargetActor && (TargetActor->GetWaitTime() > 0.f))
+	if (bSuccess && TargetActor && bWaitAtCheckpoint && (TargetActor->GetWaitTime() > 0.f))
 	{
 		// Turn the actor towards the waypoint
-		if (MyController && MyController->GetPawn() && TargetActor->GetOrientGuardToWaypoint())
+		if (MyController && TargetActor->GetOrientGuardToWaypoint())
 		{
 			APawn* Pawn = MyController->GetPawn();
 			const FVector PawnLocation = Pawn->GetActorLocation();
@@ -260,6 +265,7 @@ void UBTTask_MoveToNextWaypoint::OnMessage(UBehaviorTreeComponent& OwnerComp, ui
 			const FVector FocalPoint = PawnLocation + DirectionVector * 10000.0f;
 
 			MyController->SetFocalPoint(FocalPoint, EAIFocusPriority::Gameplay);
+
 		}
 
 		MyMemory->RemainingWaitTime = TargetActor->GetWaitTime();
@@ -279,7 +285,7 @@ void UBTTask_MoveToNextWaypoint::OnGameplayTaskDeactivated(UGameplayTask& Task)
 		if (BehaviorComp)
 		{
 			uint8* RawMemory = BehaviorComp->GetNodeMemory(this, BehaviorComp->FindInstanceContainingNode(this));
-			FBTMoveToTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToTaskMemory>(RawMemory);
+			FBTMoveToNextWaypointTaskMemory* MyMemory = CastInstanceNodeMemory<FBTMoveToNextWaypointTaskMemory>(RawMemory);
 
 			if (MyMemory->bObserverCanFinishTask && (MoveTask == MyMemory->Task))
 			{
@@ -312,7 +318,7 @@ void UBTTask_MoveToNextWaypoint::DescribeRuntimeValues(const UBehaviorTreeCompon
 	{
 		const FString KeyValue = BlackboardComp->DescribeKeyValue(BlackboardKey.GetSelectedKeyID(), EBlackboardDescription::OnlyValue);
 
-		FBTMoveToTaskMemory* MyMemory = (FBTMoveToTaskMemory*)NodeMemory;
+		FBTMoveToNextWaypointTaskMemory* MyMemory = (FBTMoveToNextWaypointTaskMemory*)NodeMemory;
 		const bool bIsUsingTask = MyMemory->Task.IsValid();
 
 		const FString ModeDesc =
@@ -326,7 +332,7 @@ void UBTTask_MoveToNextWaypoint::DescribeRuntimeValues(const UBehaviorTreeCompon
 
 uint16 UBTTask_MoveToNextWaypoint::GetInstanceMemorySize() const
 {
-	return sizeof(FBTMoveToTaskMemory);
+	return sizeof(FBTMoveToNextWaypointTaskMemory);
 }
 
 #if WITH_EDITOR
