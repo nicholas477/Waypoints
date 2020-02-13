@@ -2,6 +2,7 @@
 
 #include "Waypoint.h"
 #include "Components/SceneComponent.h"
+#include "WaypointLoop.h"
 
 #if WITH_EDITOR
 #include "ObjectEditorUtils.h"
@@ -9,6 +10,9 @@
 #include "Components/BillboardComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/ArrowComponent.h"
+
+#include "Editor/UnrealEdEngine.h"
+#include "Engine/Selection.h"
 #endif // WITH_EDITOR
 
 AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
@@ -24,8 +28,8 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 	bStopOnOverlap = true;
 	bOrientGuardToWaypoint = false;
 
-	PreviousWaypoint = this;
-	NextWaypoint = this;
+	//PreviousWaypoint = this;
+	//NextWaypoint = this;
 
 #if WITH_EDITOR
 	struct FConstructorStatics
@@ -80,16 +84,26 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 
 TArray<AWaypoint*> AWaypoint::GetLoop() const
 {
-	TArray<AWaypoint*> WaypointLoop = { const_cast<AWaypoint*>(this) };
-
-	AWaypoint* CurrentWaypoint = NextWaypoint.Get();
-	while (CurrentWaypoint && CurrentWaypoint != this && !WaypointLoop.Contains(CurrentWaypoint))
+	if (const AWaypointLoop* OwningLoop = Cast<const AWaypointLoop>(GetOwner()))
 	{
-		WaypointLoop.Push(CurrentWaypoint);
-		CurrentWaypoint = CurrentWaypoint->NextWaypoint.Get();
+		return OwningLoop->Waypoints;
 	}
 
-	return WaypointLoop;
+	return {};
+}
+
+AWaypoint* AWaypoint::GetNextWaypoint() const
+{
+	if (const AWaypointLoop* OwningLoop = Cast<const AWaypointLoop>(GetOwner()))
+	{
+		const TArray<AWaypoint*>& WaypointLoop = OwningLoop->Waypoints;
+		if (auto Index = WaypointLoop.Find(this) != INDEX_NONE)
+		{
+			return WaypointLoop[(Index + 1) % WaypointLoop.Num()];
+		}
+	}
+
+	return nullptr;
 }
 
 void AWaypoint::PostRegisterAllComponents()
@@ -112,18 +126,18 @@ void AWaypoint::PostRegisterAllComponents()
 
 void AWaypoint::PreEditChange(UProperty* PropertyThatWillChange)
 {
-#if WITH_EDITOR
-	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
-
-	if (PropertyThatWillChange && PropertyThatWillChange->GetFName() == NAME_NextWaypoint)
-	{
-		if (NextWaypoint.IsValid())
-		{
-			NextWaypoint->PreviousWaypoint = nullptr;
-			NextWaypoint->CalculateSpline();
-		}
-	}
-#endif // WITH_EDITOR
+//#if WITH_EDITOR
+//	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
+//
+//	if (PropertyThatWillChange && PropertyThatWillChange->GetFName() == NAME_NextWaypoint)
+//	{
+//		if (NextWaypoint.IsValid())
+//		{
+//			NextWaypoint->PreviousWaypoint = nullptr;
+//			NextWaypoint->CalculateSpline();
+//		}
+//	}
+//#endif // WITH_EDITOR
 
 	Super::PreEditChange(PropertyThatWillChange);
 }
@@ -133,28 +147,28 @@ void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 #if WITH_EDITOR
-	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
+	//static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
 	static const FName NAME_bOrientGuardToWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, bOrientGuardToWaypoint);
 
 	// This is called when the waypoint deletion is undo'ed
-	if (PropertyChangedEvent.ChangeType == EPropertyChangeType::Unspecified && PreviousWaypoint.IsValid())
-	{
-		PreviousWaypoint->NextWaypoint = this;
-		PreviousWaypoint->CalculateSpline();
-	}
+	//if (PropertyChangedEvent.ChangeType == EPropertyChangeType::Unspecified && PreviousWaypoint.IsValid())
+	//{
+	//	PreviousWaypoint->NextWaypoint = this;
+	//	PreviousWaypoint->CalculateSpline();
+	//}
 
 	if (PropertyChangedEvent.Property)
 	{
 		const FName ChangedPropName = PropertyChangedEvent.Property->GetFName();
 
-		if (ChangedPropName == NAME_NextWaypoint)
-		{
-			CalculateSpline();
-			if (NextWaypoint.IsValid())
-			{
-				NextWaypoint->PreviousWaypoint = this;
-			}
-		}
+		//if (ChangedPropName == NAME_NextWaypoint)
+		//{
+		//	CalculateSpline();
+		//	if (NextWaypoint.IsValid())
+		//	{
+		//		NextWaypoint->PreviousWaypoint = this;
+		//	}
+		//}
 
 		if (ChangedPropName == NAME_bOrientGuardToWaypoint && GuardFacingArrow)
 		{
@@ -169,25 +183,25 @@ void AWaypoint::PostEditImport()
 	Super::PostEditImport();
 
 #if WITH_EDITOR
-	if (!bHasBeenCopied && NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint != this)
-	{
-		// Look at the next link's previous link, set its next waypoint to this
-		if (NextWaypoint->PreviousWaypoint.IsValid())
-		{
-			NextWaypoint->PreviousWaypoint->NextWaypoint = this;
-			NextWaypoint->PreviousWaypoint->CalculateSpline();
-		}
-		PreviousWaypoint = NextWaypoint->PreviousWaypoint;
-		NextWaypoint->PreviousWaypoint = this;
+	//if (!bHasBeenCopied && NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint != this)
+	//{
+	//	// Look at the next link's previous link, set its next waypoint to this
+	//	if (NextWaypoint->PreviousWaypoint.IsValid())
+	//	{
+	//		NextWaypoint->PreviousWaypoint->NextWaypoint = this;
+	//		NextWaypoint->PreviousWaypoint->CalculateSpline();
+	//	}
+	//	PreviousWaypoint = NextWaypoint->PreviousWaypoint;
+	//	NextWaypoint->PreviousWaypoint = this;
 
-		CalculateSpline();
-		if (PreviousWaypoint.IsValid())
-		{
-			PreviousWaypoint->CalculateSpline();
-		}
+	//	CalculateSpline();
+	//	if (PreviousWaypoint.IsValid())
+	//	{
+	//		PreviousWaypoint->CalculateSpline();
+	//	}
 
-		bHasBeenCopied = true;
-	}
+	//	bHasBeenCopied = true;
+	//}
 #endif // WITH_EDITOR
 }
 
@@ -198,10 +212,10 @@ void AWaypoint::PostEditMove(bool bFinished)
 #if WITH_EDITOR
 	CalculateSpline();
 
-	if (PreviousWaypoint.IsValid())
-	{
-		PreviousWaypoint->CalculateSpline();
-	}
+	//if (PreviousWaypoint.IsValid())
+	//{
+	//	PreviousWaypoint->CalculateSpline();
+	//}
 #endif // WITH_EDITOR
 }
 
@@ -213,7 +227,8 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 void AWaypoint::CalculateSpline()
 {
 #if WITH_EDITOR
-	if (NextWaypoint.IsValid() && NextWaypoint != this)
+	AWaypoint* NextWaypoint = GetNextWaypoint();
+	if (NextWaypoint && NextWaypoint != this)
 	{
 		PathComponent->SetVisibility(true);
 
@@ -271,18 +286,31 @@ void AWaypoint::Destroyed()
 void AWaypoint::RemoveThisWaypoint()
 {
 #if WITH_EDITOR
-	// Go to the previous waypoint, and either remove this as the next waypoint or set its next waypoint to our next waypoint
-	if (PreviousWaypoint.IsValid() && PreviousWaypoint->NextWaypoint == this)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("Setting previous waypoint's next waypoint"));
-		PreviousWaypoint->NextWaypoint = NextWaypoint;
-		PreviousWaypoint->CalculateSpline();
-	}
+	//// Go to the previous waypoint, and either remove this as the next waypoint or set its next waypoint to our next waypoint
+	//if (PreviousWaypoint.IsValid() && PreviousWaypoint->NextWaypoint == this)
+	//{
+	//	//UE_LOG(LogTemp, Warning, TEXT("Setting previous waypoint's next waypoint"));
+	//	PreviousWaypoint->NextWaypoint = NextWaypoint;
+	//	PreviousWaypoint->CalculateSpline();
+	//}
 
-	if (NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint == this)
+	//if (NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint == this)
+	//{
+	//	//UE_LOG(LogTemp, Warning, TEXT("Setting next waypoint's previous waypoint"));
+	//	NextWaypoint->PreviousWaypoint = PreviousWaypoint;
+	//}
+#endif // WITH_EDITOR
+}
+
+void AWaypoint::SelectNextWaypoint() const
+{
+#if WITH_EDITOR
+	USelection* Selection = GEditor->GetSelectedActors();
+
+	if (AWaypoint* NextWaypoint = GetNextWaypoint())
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Setting next waypoint's previous waypoint"));
-		NextWaypoint->PreviousWaypoint = PreviousWaypoint;
+		Selection->DeselectAll();
+		Selection->Select(NextWaypoint);
 	}
 #endif // WITH_EDITOR
 }

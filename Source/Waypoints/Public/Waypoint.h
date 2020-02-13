@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "Waypoint.generated.h"
 
+class AWaypointLoop;
+
 UCLASS()
 class WAYPOINTS_API AWaypoint : public AActor
 {
@@ -23,7 +25,7 @@ class WAYPOINTS_API AWaypoint : public AActor
 	virtual void Destroyed() override;
 
 	UFUNCTION()
-		TWeakObjectPtr<AWaypoint> GetNextWaypoint() const { return NextWaypoint; };
+		AWaypoint* GetNextWaypoint() const;
 
 	UFUNCTION()
 		TArray<AWaypoint*> GetLoop() const;
@@ -60,11 +62,14 @@ protected:
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);
 
 protected:
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Default")
-		TWeakObjectPtr<AWaypoint> NextWaypoint;
+	//UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Default")
+	//	TWeakObjectPtr<AWaypoint> NextWaypoint;
 
-	UPROPERTY()
-		TWeakObjectPtr<AWaypoint> PreviousWaypoint;
+	//UPROPERTY()
+	//	TWeakObjectPtr<AWaypoint> PreviousWaypoint;
+
+	UFUNCTION(CallInEditor, Category = "Waypoint")
+		void SelectNextWaypoint() const;
 
 	UPROPERTY()
 		class USceneComponent* Scene;
