@@ -196,7 +196,7 @@ void UBTTask_MoveToNextWaypoint::OnTaskFinished(UBehaviorTreeComponent& OwnerCom
 		AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
 		if (TargetActor)
 		{
-			MyBlackboard->SetValueAsObject(BlackboardKey.SelectedKeyName, TargetActor->GetNextWaypoint().Get());
+			MyBlackboard->SetValueAsObject(BlackboardKey.SelectedKeyName, TargetActor->GetNextWaypoint());
 		}
 	}
 

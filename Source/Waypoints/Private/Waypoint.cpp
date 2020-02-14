@@ -97,7 +97,7 @@ AWaypoint* AWaypoint::GetNextWaypoint() const
 	if (const AWaypointLoop* OwningLoop = Cast<const AWaypointLoop>(GetOwner()))
 	{
 		const TArray<AWaypoint*>& WaypointLoop = OwningLoop->Waypoints;
-		if (auto Index = WaypointLoop.Find(this) != INDEX_NONE)
+		if (auto Index = WaypointLoop.Find(const_cast<AWaypoint*>(this)) != INDEX_NONE)
 		{
 			return WaypointLoop[(Index + 1) % WaypointLoop.Num()];
 		}
@@ -121,6 +121,8 @@ void AWaypoint::PostRegisterAllComponents()
 			NavSys->OnNavigationGenerationFinishedDelegate.AddDynamic(this, &AWaypoint::OnNavigationGenerationFinished);
 		}
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("AWaypoint: PostRegisterAllComponents"));
 #endif // WITH_EDITOR
 }
 
@@ -175,6 +177,8 @@ void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 			GuardFacingArrow->SetVisibility(bOrientGuardToWaypoint);
 		}
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("AWaypoint: PostEditChangeProperty"));
 #endif // WITH_EDITOR
 }
 
@@ -202,6 +206,8 @@ void AWaypoint::PostEditImport()
 
 	//	bHasBeenCopied = true;
 	//}
+
+	UE_LOG(LogTemp, Warning, TEXT("AWaypoint: PostEditImport"));
 #endif // WITH_EDITOR
 }
 
