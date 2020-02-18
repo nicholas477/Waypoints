@@ -7,11 +7,15 @@
 #include "WaypointLoop.generated.h"
 
 class AWaypoint;
+class USceneComponent;
 
 UCLASS()
 class WAYPOINTS_API AWaypointLoop : public AActor
 {
 	GENERATED_UCLASS_BODY()
+
+	UPROPERTY()
+		USceneComponent* Scene;
 
 	UPROPERTY(EditInstanceOnly, Category="Waypoint Loop")
 		TArray<AWaypoint*> Waypoints;

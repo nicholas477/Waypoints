@@ -20,8 +20,14 @@ class WAYPOINTS_API AWaypoint : public AActor
 	virtual void PostEditMove(bool bFinished) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
 	virtual void PostEditImport() override;
+	virtual void PostActorCreated() override;
+	virtual void PostInitProperties() override;
+	virtual void PostInitializeComponents() override;
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void RegisterAllComponents() override;
 
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
+	virtual void BeginDestroy() override;
 	virtual void Destroyed() override;
 
 	UFUNCTION()
@@ -55,6 +61,9 @@ protected:
 
 	UPROPERTY()
 		class UArrowComponent* GuardFacingArrow;
+
+	UPROPERTY(EditInstanceOnly, Category="Waypoint")
+		AWaypointLoop* OwningLoop;
 
 	void CalculateSpline();
 
