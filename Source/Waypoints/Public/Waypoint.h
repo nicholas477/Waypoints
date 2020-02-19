@@ -15,16 +15,17 @@ class WAYPOINTS_API AWaypoint : public AActor
 	GENERATED_UCLASS_BODY()
 
 	virtual void PostRegisterAllComponents() override;
-	virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
+	//virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
-	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
-	virtual void PostEditImport() override;
-	virtual void PostActorCreated() override;
-	virtual void PostInitProperties() override;
-	virtual void PostInitializeComponents() override;
-	virtual void OnConstruction(const FTransform& Transform) override;
-	virtual void RegisterAllComponents() override;
+	//virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
+	//virtual void PostEditImport() override;
+	//virtual void PostActorCreated() override;
+	//virtual void PostInitProperties() override;
+	//virtual void PostInitializeComponents() override;
+	//virtual void OnConstruction(const FTransform& Transform) override;
+	//virtual void RegisterAllComponents() override;
+	//virtual void PostLoad() override;
 
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
 	virtual void BeginDestroy() override;
@@ -79,6 +80,9 @@ protected:
 
 	UFUNCTION(CallInEditor, Category = "Waypoint")
 		void SelectNextWaypoint() const;
+
+	UFUNCTION(CallInEditor, Category = "Waypoint")
+		void CreateWaypointLoop();
 
 	UPROPERTY()
 		class USceneComponent* Scene;
