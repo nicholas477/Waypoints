@@ -18,7 +18,7 @@ class WAYPOINTS_API AWaypoint : public AActor
 	//virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
-	//virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
+	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
 	//virtual void PostEditImport() override;
 	//virtual void PostActorCreated() override;
 	//virtual void PostInitProperties() override;
@@ -33,6 +33,9 @@ class WAYPOINTS_API AWaypoint : public AActor
 
 	UFUNCTION()
 		AWaypoint* GetNextWaypoint() const;
+
+	UFUNCTION()
+		AWaypoint* GetPreviousWaypoint() const;
 
 	UFUNCTION()
 		TArray<AWaypoint*> GetLoop() const;
@@ -72,12 +75,6 @@ protected:
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);
 
 protected:
-	//UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Default")
-	//	TWeakObjectPtr<AWaypoint> NextWaypoint;
-
-	//UPROPERTY()
-	//	TWeakObjectPtr<AWaypoint> PreviousWaypoint;
-
 	UFUNCTION(CallInEditor, Category = "Waypoint")
 		void SelectNextWaypoint() const;
 

@@ -19,4 +19,7 @@ class WAYPOINTS_API AWaypointLoop : public AActor
 
 	UPROPERTY(EditInstanceOnly, Category="Waypoint Loop")
 		TArray<AWaypoint*> Waypoints;
+
+	void AddWaypoint(AWaypoint* NewWaypoint);
+	void RemoveWaypoint(const AWaypoint* Waypoint);
 };
