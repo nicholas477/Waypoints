@@ -2,6 +2,8 @@
 
 #include "WaypointsModule.h"
 
+DEFINE_LOG_CATEGORY(LogWaypoints);
+
 #define LOCTEXT_NAMESPACE "FWaypointsModule"
 
 void FWaypointsModule::StartupModule()

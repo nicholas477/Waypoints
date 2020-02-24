@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "WaypointLoop.generated.h"
 
 class AWaypoint;
@@ -18,8 +19,11 @@ class WAYPOINTS_API AWaypointLoop : public AActor
 		USceneComponent* Scene;
 
 	UPROPERTY(EditInstanceOnly, Category="Waypoint Loop")
-		TArray<AWaypoint*> Waypoints;
+		TArray<TWeakObjectPtr<AWaypoint>> Waypoints;
 
 	void AddWaypoint(AWaypoint* NewWaypoint);
+	void InsertWaypoint(AWaypoint* NewWaypoint, int32 Index);
 	void RemoveWaypoint(const AWaypoint* Waypoint);
+
+	int32 FindWaypoint(const AWaypoint* Elem) const;
 };

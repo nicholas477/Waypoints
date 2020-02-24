@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "NavigationSystem.h"
 #include "GameFramework/Actor.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "Waypoint.generated.h"
 
 class AWaypointLoop;
@@ -15,20 +16,11 @@ class WAYPOINTS_API AWaypoint : public AActor
 	GENERATED_UCLASS_BODY()
 
 	virtual void PostRegisterAllComponents() override;
-	//virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
-	//virtual void PostEditImport() override;
-	//virtual void PostActorCreated() override;
-	//virtual void PostInitProperties() override;
-	//virtual void PostInitializeComponents() override;
-	//virtual void OnConstruction(const FTransform& Transform) override;
-	//virtual void RegisterAllComponents() override;
-	//virtual void PostLoad() override;
 
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
-	virtual void BeginDestroy() override;
 	virtual void Destroyed() override;
 
 	UFUNCTION()
@@ -38,7 +30,7 @@ class WAYPOINTS_API AWaypoint : public AActor
 		AWaypoint* GetPreviousWaypoint() const;
 
 	UFUNCTION()
-		TArray<AWaypoint*> GetLoop() const;
+		TArray<TWeakObjectPtr<AWaypoint>> GetLoop() const;
 
 	UFUNCTION()
 		float GetWaitTime() const { return WaitTime; };
@@ -52,10 +44,11 @@ class WAYPOINTS_API AWaypoint : public AActor
 	UFUNCTION()
 		float GetAcceptanceRadius() const { return AcceptanceRadius; };
 
-protected:
-	bool bHasBeenCopied;
+	void CalculateSpline();
 
-	virtual void RemoveThisWaypoint();
+protected:
+	UPROPERTY()
+		TWeakObjectPtr<AWaypoint> WaypointCopiedFrom;
 
 	UPROPERTY()
 		class UBillboardComponent* Sprite;
@@ -67,9 +60,7 @@ protected:
 		class UArrowComponent* GuardFacingArrow;
 
 	UPROPERTY(EditInstanceOnly, Category="Waypoint")
-		AWaypointLoop* OwningLoop;
-
-	void CalculateSpline();
+		TWeakObjectPtr<AWaypointLoop> OwningLoop;
 
 	UFUNCTION(CallInEditor)
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);

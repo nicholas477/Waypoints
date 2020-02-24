@@ -31,7 +31,7 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 	AcceptanceRadius = 64.f;
 	WaitTime = 0.f;
 
-	bHasBeenCopied = false;
+//	bHasBeenCopied = false;
 	bStopOnOverlap = true;
 	bOrientGuardToWaypoint = false;
 
@@ -119,10 +119,9 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 //
 //}
 
-TArray<AWaypoint*> AWaypoint::GetLoop() const
+TArray<TWeakObjectPtr<AWaypoint>> AWaypoint::GetLoop() const
 {
-	//AWaypointLoop* OwningLoop = Cast<AWaypointLoop>(GetAttachParentActor());
-	if (OwningLoop)
+	if (OwningLoop.IsValid())
 	{
 		return OwningLoop->Waypoints;
 	}
@@ -132,12 +131,12 @@ TArray<AWaypoint*> AWaypoint::GetLoop() const
 
 AWaypoint* AWaypoint::GetNextWaypoint() const
 {
-	if (OwningLoop)
+	if (OwningLoop.IsValid())
 	{
-		const TArray<AWaypoint*>& WaypointLoop = OwningLoop->Waypoints;
-		if (auto Index = WaypointLoop.Find(const_cast<AWaypoint*>(this)) != INDEX_NONE)
+		const TArray<TWeakObjectPtr<AWaypoint>>& WaypointLoop = OwningLoop->Waypoints;
+		if (auto Index = OwningLoop->FindWaypoint(this); Index != INDEX_NONE)
 		{
-			return WaypointLoop[(Index + 1) % WaypointLoop.Num()];
+			return WaypointLoop[(Index + 1) % WaypointLoop.Num()].Get();
 		}
 	}
 
@@ -146,10 +145,10 @@ AWaypoint* AWaypoint::GetNextWaypoint() const
 
 AWaypoint* AWaypoint::GetPreviousWaypoint() const
 {
-	if (OwningLoop)
+	if (OwningLoop.IsValid())
 	{
-		const TArray<AWaypoint*>& WaypointLoop = OwningLoop->Waypoints;
-		if (auto Index = WaypointLoop.Find(const_cast<AWaypoint*>(this)) != INDEX_NONE)
+		const TArray<TWeakObjectPtr<AWaypoint>>& WaypointLoop = OwningLoop->Waypoints;
+		if (auto Index = OwningLoop->FindWaypoint(this); Index != INDEX_NONE)
 		{
 			int32 WrappedIndex = (Index - 1) % WaypointLoop.Num();
 			if (WrappedIndex < 0)
@@ -157,7 +156,7 @@ AWaypoint* AWaypoint::GetPreviousWaypoint() const
 				WrappedIndex += WaypointLoop.Num();
 			}
 
-			return WaypointLoop[WrappedIndex];
+			return WaypointLoop[WrappedIndex].Get();
 		}
 	}
 
@@ -183,71 +182,6 @@ void AWaypoint::PostRegisterAllComponents()
 	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostRegisterAllComponents"));
 #endif // WITH_EDITOR
 }
-
-//void AWaypoint::PreEditChange(UProperty* PropertyThatWillChange)
-//{
-////#if WITH_EDITOR
-////	static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
-////
-////	if (PropertyThatWillChange && PropertyThatWillChange->GetFName() == NAME_NextWaypoint)
-////	{
-////		if (NextWaypoint.IsValid())
-////		{
-////			NextWaypoint->PreviousWaypoint = nullptr;
-////			NextWaypoint->CalculateSpline();
-////		}
-////	}
-////#endif // WITH_EDITOR
-//
-//	Super::PreEditChange(PropertyThatWillChange);
-//}
-
-//void AWaypoint::PostActorCreated()
-//{
-//	Super::PostActorCreated();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostActorCreated"));
-//
-//	///UE_LOG(LogTemp, Warning, TEXT("Needs load? %s"), HasAnyFlags(EObjectFlags::RF_ArchetypeObject) ? TEXT("Yes") : TEXT("No"));
-//
-//	//UWorld* World = GetWorld();
-//	//if (World && IsCorrectWorldType(World) && !HasAnyFlags(EObjectFlags::RF_ClassDefaultObject | EObjectFlags::RF_ArchetypeObject | EObjectFlags::RF_DuplicateTransient))
-//	//{
-//	//	//AWaypointLoop* OwningLoop = Cast<AWaypointLoop>(GetAttachParentActor());
-//	//	if (!OwningLoop)
-//	//	{
-//	//		UE_LOG(LogTemp, Warning, TEXT("Spawning new waypoint loop!!!!!"));
-//	//		FActorSpawnParameters Params;
-//	//		Params.bAllowDuringConstructionScript = true;
-//	//		OwningLoop = World->SpawnActor<AWaypointLoop>(AWaypointLoop::StaticClass(), Params);
-//
-//	//		SetOwner(OwningLoop);
-//	//		AttachToActor(OwningLoop, FAttachmentTransformRules::KeepWorldTransform);
-//	//	}
-//	//}
-//}
-
-//void AWaypoint::PostInitializeComponents()
-//{
-//	Super::PostInitializeComponents();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostInitializeComponents"));
-//}
-
-//void AWaypoint::RegisterAllComponents()
-//{
-//	Super::RegisterAllComponents();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::RegisterAllComponents"));
-//}
-
-//void AWaypoint::OnConstruction(const FTransform& Transform)
-//{
-//	Super::OnConstruction(Transform);
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::OnConstruction"));
-//	//UE_LOG(LogTemp, Warning, TEXT("AWaypoint::OnConstruction: bActorIsBeingConstructed? %s"), bActorIsBeingConstructed ? TEXT("true") : TEXT("false"));
-//}
 
 void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -302,45 +236,9 @@ void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 		//}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostEditChangeProperty"));
+	UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::PostEditChangeProperty"));
 #endif // WITH_EDITOR
 }
-
-//void AWaypoint::PostEditImport()
-//{
-//	Super::PostEditImport();
-//
-//#if WITH_EDITOR
-//	//if (!bHasBeenCopied && NextWaypoint.IsValid() && NextWaypoint->PreviousWaypoint != this)
-//	//{
-//	//	// Look at the next link's previous link, set its next waypoint to this
-//	//	if (NextWaypoint->PreviousWaypoint.IsValid())
-//	//	{
-//	//		NextWaypoint->PreviousWaypoint->NextWaypoint = this;
-//	//		NextWaypoint->PreviousWaypoint->CalculateSpline();
-//	//	}
-//	//	PreviousWaypoint = NextWaypoint->PreviousWaypoint;
-//	//	NextWaypoint->PreviousWaypoint = this;
-//
-//	//	CalculateSpline();
-//	//	if (PreviousWaypoint.IsValid())
-//	//	{
-//	//		PreviousWaypoint->CalculateSpline();
-//	//	}
-//
-//	//	bHasBeenCopied = true;
-//	//}
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostEditImport"));
-//#endif // WITH_EDITOR
-//}
-
-//void AWaypoint::PostLoad()
-//{
-//	Super::PostLoad();
-//
-//	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostLoad"));
-//}
 
 void AWaypoint::PostEditMove(bool bFinished)
 {
@@ -349,10 +247,10 @@ void AWaypoint::PostEditMove(bool bFinished)
 #if WITH_EDITOR
 	CalculateSpline();
 
-	//if (PreviousWaypoint.IsValid())
-	//{
-	//	PreviousWaypoint->CalculateSpline();
-	//}
+	if (AWaypoint* PreviousWaypoint = GetPreviousWaypoint(); PreviousWaypoint && PreviousWaypoint != this)
+	{
+		PreviousWaypoint->CalculateSpline();
+	}
 #endif // WITH_EDITOR
 }
 
@@ -362,25 +260,14 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 
 #if WITH_EDITOR
 
-	if (OwningLoop)
+	if (OwningLoop.IsValid() && WaypointCopiedFrom.IsValid())
 	{
-		OwningLoop->AddWaypoint(this);
+		if (auto Index = OwningLoop->FindWaypoint(WaypointCopiedFrom.Get()); Index != INDEX_NONE)
+		{
+			OwningLoop->InsertWaypoint(this, Index + 1);
+			WaypointCopiedFrom = this;
+		}
 	}
-
-	//UWorld* World = GetWorld();
-	//if (World && IsCorrectWorldType(World) && !HasAnyFlags(EObjectFlags::RF_ClassDefaultObject | EObjectFlags::RF_ArchetypeObject | EObjectFlags::RF_DuplicateTransient))
-	//{
-	//	if (!OwningLoop)
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Spawning new waypoint loop!!!!!"));
-	//		FActorSpawnParameters Params;
-	//		Params.bAllowDuringConstructionScript = true;
-	//		OwningLoop = World->SpawnActor<AWaypointLoop>(AWaypointLoop::StaticClass(), Params);
-
-	//		SetOwner(OwningLoop);
-	//		AttachToActor(OwningLoop, FAttachmentTransformRules::KeepWorldTransform);
-	//	}
-	//}
 
 	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostDuplicate"));
 
@@ -439,38 +326,17 @@ void AWaypoint::OnNavigationGenerationFinished(class ANavigationData* NavData)
 	CalculateSpline();
 }
 
-void AWaypoint::BeginDestroy()
-{
-	RemoveThisWaypoint();
-
-	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::BeginDestroy()"));
-
-	Super::BeginDestroy();
-}
-
 void AWaypoint::Destroyed()
 {
-	if (OwningLoop)
+	if (OwningLoop.IsValid())
 	{
 		OwningLoop->RemoveWaypoint(this);
 		OwningLoop = nullptr;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::Destroyed()"));
+	UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::Destroyed()"));
 
 	Super::Destroyed();
-}
-
-void AWaypoint::RemoveThisWaypoint()
-{
-#if WITH_EDITOR
-	//AWaypointLoop* OwningLoop = Cast<AWaypointLoop>(GetAttachParentActor());
-	if (OwningLoop)
-	{
-		OwningLoop->Destroy();
-		OwningLoop = nullptr;
-	}
-#endif // WITH_EDITOR
 }
 
 void AWaypoint::SelectNextWaypoint() const
@@ -491,15 +357,15 @@ void AWaypoint::CreateWaypointLoop()
 #if WITH_EDITOR
 	if (UWorld* World = GetWorld())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawning new waypoint loop!!!!!"));
+		UE_LOG(LogWaypoints, Warning, TEXT("Spawning new waypoint loop!!!!!"));
 		FActorSpawnParameters Params;
 		Params.bAllowDuringConstructionScript = true;
 		OwningLoop = World->SpawnActor<AWaypointLoop>(AWaypointLoop::StaticClass(), Params);
 
-		SetOwner(OwningLoop);
-		AttachToActor(OwningLoop, FAttachmentTransformRules::KeepWorldTransform);
+		AttachToActor(OwningLoop.Get(), FAttachmentTransformRules::KeepWorldTransform);
 
 		OwningLoop->AddWaypoint(this);
+		WaypointCopiedFrom = this;
 	}
 #endif // WITH_EDITOR
 }

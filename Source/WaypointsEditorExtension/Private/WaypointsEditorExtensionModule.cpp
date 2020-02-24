@@ -125,7 +125,10 @@ void FWaypointsEditorExtensionModule_Impl::CreateWaypointsSelectionMenu(FMenuBui
 						break;
 					}
 
-					LoopWaypoints.Append(Waypoint->GetLoop());
+					for (TWeakObjectPtr<AWaypoint>& WaypointWeakPtr : Waypoint->GetLoop())
+					{
+						LoopWaypoints.Push(WaypointWeakPtr.Get());
+					}
 				}
 
 				GEditor->GetSelectedActors()->BeginBatchSelectOperation();
