@@ -13,6 +13,28 @@ AWaypointLoop::AWaypointLoop(const FObjectInitializer& ObjectInitializer)
 	SetRootComponent(Scene);
 }
 
+void AWaypointLoop::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+#if WITH_EDITOR
+	static const FName NAME_Waypoints = GET_MEMBER_NAME_CHECKED(AWaypointLoop, Waypoints);
+
+	if (PropertyChangedEvent.Property)
+	{
+		const FName ChangedPropName = PropertyChangedEvent.Property->GetFName();
+
+		if (ChangedPropName == NAME_Waypoints)
+		{
+			for (TWeakObjectPtr<AWaypoint>& Waypoint : Waypoints)
+			{
+				Waypoint->CalculateSpline();
+			}
+		}
+	}
+#endif
+}
+
 void AWaypointLoop::AddWaypoint(AWaypoint* NewWaypoint)
 {
 	check(!Waypoints.Contains(TWeakObjectPtr<AWaypoint>(NewWaypoint)));
@@ -27,11 +49,6 @@ void AWaypointLoop::InsertWaypoint(AWaypoint* NewWaypoint, int32 Index)
 	check(!Waypoints.Contains(TWeakObjectPtr<AWaypoint>(NewWaypoint)));
 
 	Waypoints.Insert(NewWaypoint, Index);
-
-	for (int i = 0; i < Waypoints.Num(); ++i)
-	{
-		UE_LOG(LogWaypoints, Warning, TEXT("Waypoints[%d]: %s"), i, *Waypoints[i]->GetName());
-	}
 }
 
 void AWaypointLoop::RemoveWaypoint(const AWaypoint* Waypoint)
@@ -77,6 +94,6 @@ int32 AWaypointLoop::FindWaypoint(const AWaypoint* Elem) const
 			return i;
 		}
 	}
-
+	
 	return INDEX_NONE;
 }

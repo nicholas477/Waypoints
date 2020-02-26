@@ -75,6 +75,9 @@ protected:
 	UPROPERTY()
 		class USceneComponent* Scene;
 
+	UPROPERTY()
+		class USphereComponent* OverlapSphere;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Default")
 		FNavAgentProperties NavProperties;
 

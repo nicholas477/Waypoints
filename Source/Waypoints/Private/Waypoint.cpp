@@ -10,6 +10,7 @@
 #include "Components/BillboardComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Components/SphereComponent.h"
 
 #include "Editor/UnrealEdEngine.h"
 #include "Engine/Selection.h"
@@ -77,6 +78,15 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		PathComponent->SetUsingAbsoluteLocation(true);
 		PathComponent->SetUsingAbsoluteRotation(true);
 		PathComponent->SetUsingAbsoluteScale(true);
+	}
+
+	OverlapSphere = ObjectInitializer.CreateEditorOnlyDefaultSubobject<USphereComponent>(this, TEXT("Overlap Sphere Visualization Component"));
+	if (OverlapSphere)
+	{
+		OverlapSphere->SetupAttachment(Scene);
+		OverlapSphere->bSelectable = false;
+		OverlapSphere->bEditableWhenInherited = false;
+		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
 	GuardFacingArrow = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UArrowComponent>(this, TEXT("Guard Facing Arrow Component"));
@@ -179,7 +189,7 @@ void AWaypoint::PostRegisterAllComponents()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostRegisterAllComponents"));
+	//UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostRegisterAllComponents"));
 #endif // WITH_EDITOR
 }
 
@@ -190,53 +200,24 @@ void AWaypoint::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 #if WITH_EDITOR
 	//static const FName NAME_NextWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, NextWaypoint);
 	static const FName NAME_bOrientGuardToWaypoint = GET_MEMBER_NAME_CHECKED(AWaypoint, bOrientGuardToWaypoint);
-	static const FName NAME_OwningLoop = GET_MEMBER_NAME_CHECKED(AWaypoint, OwningLoop);
-
-	// This is called when the waypoint deletion is undo'ed
-	//if (PropertyChangedEvent.ChangeType == EPropertyChangeType::Unspecified && PreviousWaypoint.IsValid())
-	//{
-	//	PreviousWaypoint->NextWaypoint = this;
-	//	PreviousWaypoint->CalculateSpline();
-	//}
+	static const FName NAME_AcceptanceRadius = GET_MEMBER_NAME_CHECKED(AWaypoint, AcceptanceRadius);
 
 	if (PropertyChangedEvent.Property)
 	{
 		const FName ChangedPropName = PropertyChangedEvent.Property->GetFName();
-
-		//if (ChangedPropName == NAME_NextWaypoint)
-		//{
-		//	CalculateSpline();
-		//	if (NextWaypoint.IsValid())
-		//	{
-		//		NextWaypoint->PreviousWaypoint = this;
-		//	}
-		//}
 
 		if (ChangedPropName == NAME_bOrientGuardToWaypoint && GuardFacingArrow)
 		{
 			GuardFacingArrow->SetVisibility(bOrientGuardToWaypoint);
 		}
 
-		//if (ChangedPropName == NAME_OwningLoop)
-		//{
-		//	UWorld* World = GetWorld();
-		//	if (World && IsCorrectWorldType(World) && !HasAnyFlags(EObjectFlags::RF_ClassDefaultObject | EObjectFlags::RF_ArchetypeObject | EObjectFlags::RF_DuplicateTransient))
-		//	{
-		//		if (!OwningLoop)
-		//		{
-		//			UE_LOG(LogTemp, Warning, TEXT("Spawning new waypoint loop!!!!!"));
-		//			FActorSpawnParameters Params;
-		//			Params.bAllowDuringConstructionScript = true;
-		//			OwningLoop = World->SpawnActor<AWaypointLoop>(AWaypointLoop::StaticClass(), Params);
-
-		//			SetOwner(OwningLoop);
-		//			AttachToActor(OwningLoop, FAttachmentTransformRules::KeepWorldTransform);
-		//		}
-		//	}
-		//}
+		if (ChangedPropName == NAME_AcceptanceRadius)
+		{
+			OverlapSphere->SetSphereRadius(AcceptanceRadius);
+		} 
 	}
 
-	UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::PostEditChangeProperty"));
+	//UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::PostEditChangeProperty"));
 #endif // WITH_EDITOR
 }
 
@@ -260,6 +241,9 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 
 #if WITH_EDITOR
 
+	if (DuplicateMode != EDuplicateMode::Normal)
+		return;
+
 	if (OwningLoop.IsValid() && WaypointCopiedFrom.IsValid())
 	{
 		if (auto Index = OwningLoop->FindWaypoint(WaypointCopiedFrom.Get()); Index != INDEX_NONE)
@@ -269,7 +253,7 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostDuplicate"));
+	//UE_LOG(LogTemp, Warning, TEXT("AWaypoint::PostDuplicate"));
 
 #endif
 }
@@ -334,7 +318,7 @@ void AWaypoint::Destroyed()
 		OwningLoop = nullptr;
 	}
 
-	UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::Destroyed()"));
+	//UE_LOG(LogWaypoints, Warning, TEXT("AWaypoint::Destroyed()"));
 
 	Super::Destroyed();
 }
@@ -357,7 +341,7 @@ void AWaypoint::CreateWaypointLoop()
 #if WITH_EDITOR
 	if (UWorld* World = GetWorld())
 	{
-		UE_LOG(LogWaypoints, Warning, TEXT("Spawning new waypoint loop!!!!!"));
+		//UE_LOG(LogWaypoints, Warning, TEXT("Spawning new waypoint loop!!!!!"));
 		FActorSpawnParameters Params;
 		Params.bAllowDuringConstructionScript = true;
 		OwningLoop = World->SpawnActor<AWaypointLoop>(AWaypointLoop::StaticClass(), Params);
