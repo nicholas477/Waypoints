@@ -5,29 +5,50 @@
 #include "CoreMinimal.h"
 #include "NavigationSystem.h"
 #include "GameFramework/Actor.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "Waypoint.generated.h"
+
+class AWaypointLoop;
 
 UCLASS()
 class WAYPOINTS_API AWaypoint : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
-		virtual void PostRegisterAllComponents() override;
-	virtual void PreEditChange(UProperty* PropertyThatWillChange) override;
+	virtual void PostRegisterAllComponents() override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
-	virtual void PostEditImport() override;
 
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
 	virtual void Destroyed() override;
 
-	TArray<AWaypoint*> GetLoop();
+	UFUNCTION()
+		AWaypoint* GetNextWaypoint() const;
+
+	UFUNCTION()
+		AWaypoint* GetPreviousWaypoint() const;
+
+	UFUNCTION()
+		TArray<TWeakObjectPtr<AWaypoint>> GetLoop() const;
+
+	UFUNCTION()
+		float GetWaitTime() const { return WaitTime; };
+
+	UFUNCTION()
+		bool GetOrientGuardToWaypoint() const { return bOrientGuardToWaypoint; };
+
+	UFUNCTION()
+		bool GetStopOnOverlap() const { return bStopOnOverlap; };
+
+	UFUNCTION()
+		float GetAcceptanceRadius() const { return AcceptanceRadius; };
+
+	void CalculateSpline();
 
 protected:
-	bool bHasBeenCopied;
-
-	virtual void RemoveThisWaypoint();
+	UPROPERTY()
+		TWeakObjectPtr<AWaypoint> WaypointCopiedFrom;
 
 	UPROPERTY()
 		class UBillboardComponent* Sprite;
@@ -38,20 +59,24 @@ protected:
 	UPROPERTY()
 		class UArrowComponent* GuardFacingArrow;
 
-	void CalculateSpline();
+	UPROPERTY(EditInstanceOnly, Category="Waypoint")
+		TWeakObjectPtr<AWaypointLoop> OwningLoop;
 
 	UFUNCTION(CallInEditor)
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);
 
 protected:
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Default")
-		TWeakObjectPtr<AWaypoint> NextWaypoint;
+	UFUNCTION(CallInEditor, Category = "Waypoint")
+		void SelectNextWaypoint() const;
 
-	UPROPERTY()
-		TWeakObjectPtr<AWaypoint> PreviousWaypoint;
+	UFUNCTION(CallInEditor, Category = "Waypoint")
+		void CreateWaypointLoop();
 
 	UPROPERTY()
 		class USceneComponent* Scene;
+
+	UPROPERTY()
+		class USphereComponent* OverlapSphere;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Default")
 		FNavAgentProperties NavProperties;
