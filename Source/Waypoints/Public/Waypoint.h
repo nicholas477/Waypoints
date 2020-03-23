@@ -23,25 +23,25 @@ class WAYPOINTS_API AWaypoint : public AActor
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
 	virtual void Destroyed() override;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Waypoint")
 		AWaypoint* GetNextWaypoint() const;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Waypoint")
 		AWaypoint* GetPreviousWaypoint() const;
 
 	UFUNCTION()
 		TArray<TWeakObjectPtr<AWaypoint>> GetLoop() const;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Waypoint")
 		float GetWaitTime() const { return WaitTime; };
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Waypoint")
 		bool GetOrientGuardToWaypoint() const { return bOrientGuardToWaypoint; };
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Waypoint")
 		bool GetStopOnOverlap() const { return bStopOnOverlap; };
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Waypoint")
 		float GetAcceptanceRadius() const { return AcceptanceRadius; };
 
 	void CalculateSpline();
