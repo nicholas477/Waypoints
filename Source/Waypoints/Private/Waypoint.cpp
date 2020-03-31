@@ -29,7 +29,7 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 	Scene = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
 	SetRootComponent(Scene);
 
-	AcceptanceRadius = 64.f;
+	AcceptanceRadius = 128.f;
 	WaitTime = 0.f;
 
 //	bHasBeenCopied = false;
@@ -86,7 +86,10 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 		OverlapSphere->SetupAttachment(Scene);
 		OverlapSphere->bSelectable = false;
 		OverlapSphere->bEditableWhenInherited = false;
-		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Overlap);
+		OverlapSphere->SetSphereRadius(AcceptanceRadius);
 	}
 
 	GuardFacingArrow = ObjectInitializer.CreateEditorOnlyDefaultSubobject<UArrowComponent>(this, TEXT("Guard Facing Arrow Component"));

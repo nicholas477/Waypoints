@@ -1,5 +1,7 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
+#include "WaypointsModule.h"
+
 #include "BTTask_MoveToNextWaypoint.h"
 #include "GameFramework/Actor.h"
 #include "AISystem.h"
@@ -19,6 +21,8 @@ UBTTask_MoveToNextWaypoint::UBTTask_MoveToNextWaypoint(const FObjectInitializer&
 	bUseGameplayTasks = GET_AI_CONFIG_VAR(bEnableBTAITasks);
 	bNotifyTick = !bUseGameplayTasks;
 	bNotifyTaskFinished = true;
+
+	AcceptanceRadius = 32.f;
 
 	bReachTestIncludesGoalRadius = bReachTestIncludesAgentRadius = GET_AI_CONFIG_VAR(bFinishMoveOnGoalOverlap);
 	//bAllowStrafe = GET_AI_CONFIG_VAR(bAllowStrafing);
@@ -64,6 +68,8 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 		MoveReq.SetNavigationFilter(MyController->GetDefaultNavigationFilterClass());
 		//MoveReq.SetCanStrafe(bAllowStrafe);
 		MoveReq.SetUsePathfinding(true);
+		MoveReq.SetStopOnOverlap(true);
+		MoveReq.SetAllowPartialPath(true);
 
 		if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
 		{
@@ -71,9 +77,9 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 			AWaypoint* TargetActor = Cast<AWaypoint>(KeyValue);
 			if (TargetActor)
 			{
-				MoveReq.SetAcceptanceRadius(TargetActor->GetAcceptanceRadius());
-				MoveReq.SetReachTestIncludesAgentRadius(true);
-				MoveReq.SetReachTestIncludesGoalRadius(true);
+				MoveReq.SetAcceptanceRadius(AcceptanceRadius);
+				MoveReq.SetReachTestIncludesAgentRadius(bReachTestIncludesAgentRadius);
+				MoveReq.SetReachTestIncludesGoalRadius(bReachTestIncludesGoalRadius);
 				MoveReq.SetGoalActor(TargetActor);
 			}
 			else

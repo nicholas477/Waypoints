@@ -50,8 +50,8 @@ class WAYPOINTS_API UBTTask_MoveToNextWaypoint : public UBTTask_BlackboardBase
 	UPROPERTY(Category = Node, EditAnywhere)
 	uint32 bReachTestIncludesGoalRadius : 1;
 
-	//UPROPERTY(Category = Node, EditAnywhere, AdvancedDisplay)
-	//uint32 bAllowStrafe : 1;
+	UPROPERTY(Category = Node, EditAnywhere)
+	float AcceptanceRadius;
 
 	/** set automatically if move should use GameplayTasks */
 	uint32 bUseGameplayTasks : 1;

@@ -75,7 +75,7 @@ protected:
 	UPROPERTY()
 		class USceneComponent* Scene;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Default", meta = (AllowPrivateAccess = "true"))
 		class USphereComponent* OverlapSphere;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Default")
