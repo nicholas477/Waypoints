@@ -1,8 +1,8 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
+#include "BTTask_MoveToNextWaypoint.h"
 #include "WaypointsModule.h"
 
-#include "BTTask_MoveToNextWaypoint.h"
 #include "GameFramework/Actor.h"
 #include "AISystem.h"
 #include "Navigation/PathFollowingComponent.h"

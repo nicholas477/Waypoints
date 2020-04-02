@@ -3,7 +3,7 @@
 #include "WaypointsEditorExtensionModule.h"
 
 #include "Waypoint.h"
-#include "Engine.h"
+//#include "Engine.h"
 #include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
