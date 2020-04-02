@@ -11,7 +11,7 @@ public class Waypoints : ModuleRules
 
         CppStandard = CppStandardVersion.Cpp17;
 
-        PrivatePCHHeaderFile = "";
+        PrivatePCHHeaderFile = null;
 
         PublicDependencyModuleNames.AddRange(
             new string[]
