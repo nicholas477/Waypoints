@@ -11,8 +11,6 @@ public class WaypointsEditorExtension : ModuleRules
 
         CppStandard = CppStandardVersion.Cpp17;
 
-        PrivatePCHHeaderFile = null;
-
         PublicDependencyModuleNames.AddRange(
             new string[]
             {

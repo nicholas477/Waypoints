@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Modules/ModuleManager.h"
+#include "CoreGlobals.h"
+#include "Modules/ModuleInterface.h"
 
 class FWaypointsModule : public IModuleInterface
 {
