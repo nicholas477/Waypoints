@@ -6,10 +6,8 @@ public class Waypoints : ModuleRules
 {
     public Waypoints(ReadOnlyTargetRules Target) : base(Target)
     {
-        PCHUsage = PCHUsageMode.NoSharedPCHs;
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         CppStandard = CppStandardVersion.Cpp17;
-
-        PrivatePCHHeaderFile = "Private/WaypointsPCH.h";
 
         PublicIncludePaths.AddRange(
             new string[] {
