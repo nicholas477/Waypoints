@@ -8,6 +8,7 @@
 #include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Editor/UnrealEdEngine.h"
+#include "UnrealEdGlobals.h"
 #include "Engine/Selection.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "ClassIconFinder.h"

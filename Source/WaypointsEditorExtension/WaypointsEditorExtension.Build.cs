@@ -7,7 +7,7 @@ public class WaypointsEditorExtension : ModuleRules
     public WaypointsEditorExtension(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = true;
-        PCHUsage = PCHUsageMode.NoSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         CppStandard = CppStandardVersion.Cpp17;
 
