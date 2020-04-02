@@ -7,7 +7,7 @@ public class Waypoints : ModuleRules
     public Waypoints(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = true;
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.NoSharedPCHs;
 
         CppStandard = CppStandardVersion.Cpp17;
 
