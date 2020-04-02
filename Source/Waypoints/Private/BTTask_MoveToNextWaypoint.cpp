@@ -68,7 +68,7 @@ EBTNodeResult::Type UBTTask_MoveToNextWaypoint::PerformMoveTask(UBehaviorTreeCom
 		MoveReq.SetNavigationFilter(MyController->GetDefaultNavigationFilterClass());
 		//MoveReq.SetCanStrafe(bAllowStrafe);
 		MoveReq.SetUsePathfinding(true);
-		MoveReq.SetStopOnOverlap(true);
+		//MoveReq.SetStopOnOverlap(true);
 		MoveReq.SetAllowPartialPath(true);
 
 		if (BlackboardKey.SelectedKeyType == UBlackboardKeyType_Object::StaticClass())
