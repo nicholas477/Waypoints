@@ -2,11 +2,11 @@
 
 #include "WaypointsEditorExtensionModule.h"
 
+#include "Engine/Engine.h"
 #include "Modules/ModuleManager.h"
 #include "Waypoint.h"
 #include "Styling/SlateStyle.h"
 #include "Styling/SlateStyleRegistry.h"
-#include "UnrealEdGlobals.h"
 #include "Editor/UnrealEdEngine.h"
 #include "Engine/Selection.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
