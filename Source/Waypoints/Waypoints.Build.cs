@@ -7,11 +7,7 @@ public class Waypoints : ModuleRules
     public Waypoints(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = true;
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-        CppStandard = CppStandardVersion.Cpp17;
-
-        PrivatePCHHeaderFile = null;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
             new string[]

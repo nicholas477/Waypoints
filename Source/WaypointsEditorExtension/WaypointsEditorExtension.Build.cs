@@ -7,7 +7,7 @@ public class WaypointsEditorExtension : ModuleRules
     public WaypointsEditorExtension(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = true;
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
             new string[]
