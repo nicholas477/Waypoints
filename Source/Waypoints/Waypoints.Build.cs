@@ -7,23 +7,11 @@ public class Waypoints : ModuleRules
     public Waypoints(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = true;
-
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
         CppStandard = CppStandardVersion.Cpp17;
 
-        PublicIncludePaths.AddRange(
-            new string[] {
-				// ... add public include paths required here ...
-			}
-            );
-
-
-        PrivateIncludePaths.AddRange(
-            new string[] {
-				// ... add other private include paths required here ...
-			}
-            );
-
+        PrivatePCHHeaderFile = "";
 
         PublicDependencyModuleNames.AddRange(
             new string[]
@@ -34,7 +22,7 @@ public class Waypoints : ModuleRules
                 "GameplayTasks",
 				// ... add other public dependencies that you statically link with here ...
 			}
-            );
+        );
 
 
         PrivateDependencyModuleNames.AddRange(
@@ -45,14 +33,6 @@ public class Waypoints : ModuleRules
                 "Slate",
                 "SlateCore",
 				// ... add private dependencies that you statically link with here ...	
-			}
-            );
-
-
-        DynamicallyLoadedModuleNames.AddRange(
-            new string[]
-            {
-				// ... add any modules that your module loads dynamically here ...
 			}
         );
 
