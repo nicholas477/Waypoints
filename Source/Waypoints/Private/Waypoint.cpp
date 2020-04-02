@@ -147,7 +147,8 @@ AWaypoint* AWaypoint::GetNextWaypoint() const
 	if (OwningLoop.IsValid())
 	{
 		const TArray<TWeakObjectPtr<AWaypoint>>& WaypointLoop = OwningLoop->Waypoints;
-		if (auto Index = OwningLoop->FindWaypoint(this); Index != INDEX_NONE)
+		auto Index = OwningLoop->FindWaypoint(this);
+		if (Index != INDEX_NONE)
 		{
 			return WaypointLoop[(Index + 1) % WaypointLoop.Num()].Get();
 		}
@@ -161,7 +162,8 @@ AWaypoint* AWaypoint::GetPreviousWaypoint() const
 	if (OwningLoop.IsValid())
 	{
 		const TArray<TWeakObjectPtr<AWaypoint>>& WaypointLoop = OwningLoop->Waypoints;
-		if (auto Index = OwningLoop->FindWaypoint(this); Index != INDEX_NONE)
+		auto Index = OwningLoop->FindWaypoint(this);
+		if (Index != INDEX_NONE)
 		{
 			int32 WrappedIndex = (Index - 1) % WaypointLoop.Num();
 			if (WrappedIndex < 0)
@@ -231,7 +233,8 @@ void AWaypoint::PostEditMove(bool bFinished)
 #if WITH_EDITOR
 	CalculateSpline();
 
-	if (AWaypoint* PreviousWaypoint = GetPreviousWaypoint(); PreviousWaypoint && PreviousWaypoint != this)
+	AWaypoint* PreviousWaypoint = GetPreviousWaypoint();
+	if (PreviousWaypoint && PreviousWaypoint != this)
 	{
 		PreviousWaypoint->CalculateSpline();
 	}
@@ -249,7 +252,8 @@ void AWaypoint::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 
 	if (OwningLoop.IsValid() && WaypointCopiedFrom.IsValid())
 	{
-		if (auto Index = OwningLoop->FindWaypoint(WaypointCopiedFrom.Get()); Index != INDEX_NONE)
+		auto Index = OwningLoop->FindWaypoint(WaypointCopiedFrom.Get());
+		if (Index != INDEX_NONE)
 		{
 			OwningLoop->InsertWaypoint(this, Index + 1);
 			WaypointCopiedFrom = this;

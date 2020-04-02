@@ -9,11 +9,6 @@ public class Waypoints : ModuleRules
         bEnforceIWYU = true;
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        CppStandard = CppStandardVersion.Cpp17;
-
-        PrivateIncludePaths.AddRange(new string[] { "Waypoints/Private" });
-        PublicIncludePaths.AddRange(new string[] { "Waypoints/Public" });
-
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
