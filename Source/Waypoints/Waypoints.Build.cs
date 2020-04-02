@@ -11,6 +11,9 @@ public class Waypoints : ModuleRules
 
         CppStandard = CppStandardVersion.Cpp17;
 
+        PrivateIncludePaths.AddRange(new string[] { "Waypoints/Private" });
+        PublicIncludePaths.AddRange(new string[] { "Waypoints/Public" });
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {

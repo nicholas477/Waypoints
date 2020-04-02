@@ -11,6 +11,9 @@ public class WaypointsEditorExtension : ModuleRules
 
         CppStandard = CppStandardVersion.Cpp17;
 
+        PrivateIncludePaths.AddRange(new string[] { "WaypointsEditorExtension/Private" });
+        PublicIncludePaths.AddRange(new string[] { "WaypointsEditorExtension/Public" });
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
