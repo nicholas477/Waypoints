@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreGlobals.h"
+#include "Logging/LogMacros.h"
 #include "Modules/ModuleInterface.h"
 
 class FWaypointsModule : public IModuleInterface
