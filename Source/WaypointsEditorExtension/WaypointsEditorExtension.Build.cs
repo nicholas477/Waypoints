@@ -9,6 +9,10 @@ public class WaypointsEditorExtension : ModuleRules
         bEnforceIWYU = true;
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        CppStandard = CppStandardVersion.Cpp17;
+
+        PrivatePCHHeaderFile = null;
+
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
