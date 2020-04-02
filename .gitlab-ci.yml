@@ -1,0 +1,6 @@
+image: registry.cactus.vg/nchalkley2/ue4-docker:4.24.1
+
+build:
+    stage: build
+    script:
+        - ue4 build
