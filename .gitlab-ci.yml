@@ -1,4 +1,4 @@
 include:
   - project: 'nchalkley2/ci-templates'
     ref: master
-    file: '/ue4-plugin.gitlab-ci-template.yml'
+    file: '/ue4/4.24.1/ue4-plugin.gitlab-ci-template.yml'
