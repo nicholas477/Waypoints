@@ -13,16 +13,16 @@ AWaypointLoop::AWaypointLoop(const FObjectInitializer& ObjectInitializer)
 	SetRootComponent(Scene);
 }
 
-void AWaypointLoop::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+void AWaypointLoop::PostEditChangeProperty(FPropertyChangedEvent& Event)
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	Super::PostEditChangeProperty(Event);
 
 #if WITH_EDITOR
 	static const FName NAME_Waypoints = GET_MEMBER_NAME_CHECKED(AWaypointLoop, Waypoints);
 
-	if (PropertyChangedEvent.Property)
+	if (Event.Property)
 	{
-		const FName ChangedPropName = PropertyChangedEvent.Property->GetFName();
+		const FName ChangedPropName = Event.Property->GetFName();
 
 		if (ChangedPropName == NAME_Waypoints)
 		{

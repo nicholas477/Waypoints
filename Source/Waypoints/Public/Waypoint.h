@@ -16,11 +16,12 @@ class WAYPOINTS_API AWaypoint : public AActor
 	GENERATED_UCLASS_BODY()
 
 	virtual void PostRegisterAllComponents() override;
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual void PostEditMove(bool bFinished) override;
-	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
-
 	virtual bool CanDeleteSelectedActor(FText& OutReason) const override { return true; };
+#endif // WITH_EDITOR
+	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
 	virtual void Destroyed() override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Waypoint")
