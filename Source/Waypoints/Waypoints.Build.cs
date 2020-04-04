@@ -16,7 +16,6 @@ public class Waypoints : ModuleRules
                 "NavigationSystem",
                 "AIModule",
                 "GameplayTasks",
-				// ... add other public dependencies that you statically link with here ...
 			}
         );
 
@@ -28,7 +27,6 @@ public class Waypoints : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-				// ... add private dependencies that you statically link with here ...	
 			}
         );
 
