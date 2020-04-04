@@ -26,5 +26,7 @@ class WAYPOINTS_API AWaypointLoop : public AActor
 	void RemoveWaypoint(const AWaypoint* Waypoint);
 	int32 FindWaypoint(const AWaypoint* Elem) const;
 
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& Event) override;
+#endif // WITH_EDITOR
 };

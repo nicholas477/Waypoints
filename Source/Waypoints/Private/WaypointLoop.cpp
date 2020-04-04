@@ -13,11 +13,11 @@ AWaypointLoop::AWaypointLoop(const FObjectInitializer& ObjectInitializer)
 	SetRootComponent(Scene);
 }
 
+#if WITH_EDITOR
 void AWaypointLoop::PostEditChangeProperty(FPropertyChangedEvent& Event)
 {
 	Super::PostEditChangeProperty(Event);
 
-#if WITH_EDITOR
 	static const FName NAME_Waypoints = GET_MEMBER_NAME_CHECKED(AWaypointLoop, Waypoints);
 
 	if (Event.Property)
@@ -32,8 +32,8 @@ void AWaypointLoop::PostEditChangeProperty(FPropertyChangedEvent& Event)
 			}
 		}
 	}
-#endif
 }
+#endif // WITH_EDITOR
 
 void AWaypointLoop::AddWaypoint(AWaypoint* NewWaypoint)
 {
