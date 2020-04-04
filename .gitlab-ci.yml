@@ -1,14 +1,4 @@
-image: registry.cactus.vg/nchalkley2/ue4-docker:4.24.1
-
-build:
-    stage: build
-    script:
-        - ue4 package
-        - mv dist "$CI_PROJECT_TITLE"
-    artifacts:
-        paths:
-            - $CI_PROJECT_TITLE/Binaries/
-            - $CI_PROJECT_TITLE/Resources/
-            - $CI_PROJECT_TITLE/Source/
-            - $CI_PROJECT_TITLE/*.uplugin
-
+include:
+  - project: 'nchalkley2/ci-templates'
+    ref: master
+    file: '/ue4-plugin.gitlab-ci-template.yml'
