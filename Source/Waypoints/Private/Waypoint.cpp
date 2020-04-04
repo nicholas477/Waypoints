@@ -33,9 +33,9 @@ AWaypoint::AWaypoint(const FObjectInitializer& ObjectInitializer)
 	bStopOnOverlap = true;
 	bOrientGuardToWaypoint = false;
 
+#if WITH_EDITOR
 	bRunConstructionScriptOnDrag = false;
 
-#if WITH_EDITOR
 	struct FConstructorStatics
 	{
 		ConstructorHelpers::FObjectFinderOptional<UTexture2D> WaypointIcon;
