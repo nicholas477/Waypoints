@@ -51,46 +51,46 @@ protected:
 	UPROPERTY()
 		TWeakObjectPtr<AWaypoint> WaypointCopiedFrom;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Waypoint|Components", meta = (AllowPrivateAccess = "true"))
+		class USceneComponent* Scene;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Waypoint|Components", meta = (AllowPrivateAccess = "true"))
+		class USphereComponent* OverlapSphere;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Waypoint|Components", meta = (AllowPrivateAccess = "true"))
 		class UBillboardComponent* Sprite;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Waypoint|Components", meta = (AllowPrivateAccess = "true"))
 		class USplineComponent* PathComponent;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Waypoint|Components", meta = (AllowPrivateAccess = "true"))
 		class UArrowComponent* GuardFacingArrow;
 
 	UPROPERTY(EditInstanceOnly, Category="Waypoint")
 		TWeakObjectPtr<AWaypointLoop> OwningLoop;
 
+protected:
 	UFUNCTION(CallInEditor)
 		void OnNavigationGenerationFinished(class ANavigationData* NavData);
 
-protected:
 	UFUNCTION(CallInEditor, Category = "Waypoint")
 		void SelectNextWaypoint() const;
 
 	UFUNCTION(CallInEditor, Category = "Waypoint")
 		void CreateWaypointLoop();
 
-	UPROPERTY()
-		class USceneComponent* Scene;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Default", meta = (AllowPrivateAccess = "true"))
-		class USphereComponent* OverlapSphere;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Default")
 		FNavAgentProperties NavProperties;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint", meta = (ClampMin = "0.0", UIMin = "0.0"))
 		float WaitTime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
 		bool bOrientGuardToWaypoint;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint")
 		bool bStopOnOverlap;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Default", meta = (ClampMin = "-1.0", UIMin = "-1.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waypoint", meta = (ClampMin = "-1.0", UIMin = "-1.0"))
 		float AcceptanceRadius;
 };
